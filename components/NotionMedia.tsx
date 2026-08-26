@@ -5,15 +5,16 @@ export default function NotionMedia({
   media,
   alt,
   className,
+  trim,
 }: {
   media: MediaRef | null | undefined;
   alt: string;
   className?: string;
+  trim?: boolean;
 }) {
-  const src = mediaSrc(media);
-  if (!src) return null;
-
   if (media?.isVideo) {
+    const src = mediaSrc(media);
+    if (!src) return null;
     return (
       <video className={className} autoPlay muted loop playsInline>
         <source src={src} />
@@ -21,5 +22,7 @@ export default function NotionMedia({
     );
   }
 
+  const src = mediaSrc(media, { trim });
+  if (!src) return null;
   return <img className={className} src={src} alt={alt} />;
 }

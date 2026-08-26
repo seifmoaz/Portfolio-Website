@@ -59,7 +59,7 @@ export default async function HomePage() {
               logos.map((logo) => (
                 <a key={logo.id} className="brand-name" href={logo.link || "/work"}>
                   {logo.logo ? (
-                    <NotionMedia media={logo.logo} alt={logo.name} className="brand-logo-img" />
+                    <NotionMedia media={logo.logo} alt={logo.name} className="brand-logo-img" trim />
                   ) : (
                     logo.name
                   )}
