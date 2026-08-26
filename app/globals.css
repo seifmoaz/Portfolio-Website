@@ -165,11 +165,25 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
   opacity:0.88; transition:opacity .2s ease, transform .2s ease;
 }
 .brand-grid .brand-name:hover .brand-logo-img{ opacity:1; transform:scale(1.04); }
+
+/* These two are genuinely tall/narrow marks (aspect ratio ~0.6-0.85), so
+   the shared height cap leaves them visually smaller than the wordmarks
+   next to them — give them a manual size boost. If either is renamed in
+   Notion, update the alt-text selector below to match. */
+.brand-grid .brand-logo-img[alt="Copa Acai"],
+.brand-grid .brand-logo-img[alt="Hara Hachi Bu"]{
+  max-height:92px;
+}
+
 @media (max-width:600px){
   .brands{ padding-top:64px; padding-bottom:64px; }
   .brand-grid{ grid-template-columns:repeat(2,1fr); row-gap:36px; column-gap:20px; }
   .brand-grid .brand-name{ font-size:12px; letter-spacing:0; line-height:1.3; }
   .brand-grid .brand-logo-img{ max-height:44px; max-width:100px; }
+  .brand-grid .brand-logo-img[alt="Copa Acai"],
+  .brand-grid .brand-logo-img[alt="Hara Hachi Bu"]{
+    max-height:60px;
+  }
 }
 
 /* ============ HOME: BEST SHOTS (masonry) ============ */
