@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import NotionMedia from "@/components/NotionMedia";
+import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
+import { mediaSrc } from "@/lib/notion-media";
 import { getPhotographyItems } from "@/lib/notion";
 
 export const revalidate = 60;
@@ -16,6 +17,22 @@ const PLACEHOLDER_SEEDS = [
 export default async function PhotographyPage() {
   const items = await getPhotographyItems();
 
+  const gridItems: PinItem[] =
+    items.length === 0
+      ? PLACEHOLDER_SEEDS.map(([seed, size]) => ({
+          key: seed,
+          src: `https://picsum.photos/seed/${seed}/${size}`,
+          alt: "Photograph",
+        }))
+      : items
+          .filter((item) => item.image)
+          .map((item) => ({
+            key: item.id,
+            src: mediaSrc(item.image)!,
+            alt: item.caption || "Photograph",
+            isVideo: item.image!.isVideo,
+          }));
+
   return (
     <>
       <Header active="photography" />
@@ -26,25 +43,13 @@ export default async function PhotographyPage() {
           </p>
           <h1>Photography</h1>
           <p>
-            Stills from fashion, F&amp;B, and events, shot across Egypt and worldwide. The archive
-            grows every time the camera comes out.
+            The stuff I shoot when nobody&apos;s paying me to. Cairo and wherever else the trip
+            takes me — collected here as it happens.
           </p>
         </section>
 
         <section className="wrap photo-gallery">
-          <div className="photo-masonry">
-            {items.length === 0
-              ? PLACEHOLDER_SEEDS.map(([seed, size]) => (
-                  <div className="photo-item" key={seed}>
-                    <img src={`https://picsum.photos/seed/${seed}/${size}`} alt="Photograph" />
-                  </div>
-                ))
-              : items.map((item) => (
-                  <div className="photo-item" key={item.id}>
-                    <NotionMedia media={item.image} alt={item.caption || "Photograph"} />
-                  </div>
-                ))}
-          </div>
+          <PinterestGrid items={gridItems} />
         </section>
       </main>
       <Footer />

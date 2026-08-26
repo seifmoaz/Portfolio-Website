@@ -104,6 +104,9 @@ export default async function HomePage() {
         </Reveal>
 
         <Reveal as="section" className="wrap reel" id="work">
+          <div className="section-head">
+            <h2>Photography</h2>
+          </div>
           <div className="reel-masonry">
             <div className="reel-item"><img src="https://picsum.photos/seed/seif-fashion-01/700/900" alt="Editorial fashion photography" /></div>
             <div className="reel-item"><img src="https://picsum.photos/seed/seif-fnb-01/900/600" alt="F&B photography" /></div>
