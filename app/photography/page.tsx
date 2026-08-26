@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
+import ScrollToTop from "@/components/ScrollToTop";
 import { mediaSrc } from "@/lib/notion-media";
 import { getPhotographyItems } from "@/lib/notion";
 
@@ -35,6 +36,7 @@ export default async function PhotographyPage() {
 
   return (
     <>
+      <ScrollToTop />
       <Header active="photography" />
       <main>
         <section className="wrap page-head">
@@ -43,8 +45,8 @@ export default async function PhotographyPage() {
           </p>
           <h1>Photography</h1>
           <p>
-            The stuff I shoot when nobody&apos;s paying me to. Cairo and wherever else the trip
-            takes me — collected here as it happens.
+            The stuff I shoot when nobody&apos;s paying me to, in Cairo and wherever else the trip
+            takes me. This is where the passion kicks in, collected here as it happens.
           </p>
         </section>
 

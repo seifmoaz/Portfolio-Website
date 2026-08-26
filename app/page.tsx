@@ -161,15 +161,13 @@ export default async function HomePage() {
 
           <div className="wrap">
             <form className="contact-form" action="mailto:contact@seifmoaz.com" method="POST" encType="text/plain">
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="cf-first">First Name</label>
-                  <input type="text" id="cf-first" name="First Name" required />
-                </div>
-                <div className="form-field">
-                  <label htmlFor="cf-last">Last Name</label>
-                  <input type="text" id="cf-last" name="Last Name" required />
-                </div>
+              <div className="form-field">
+                <label htmlFor="cf-first">First Name</label>
+                <input type="text" id="cf-first" name="First Name" required />
+              </div>
+              <div className="form-field">
+                <label htmlFor="cf-last">Last Name</label>
+                <input type="text" id="cf-last" name="Last Name" required />
               </div>
               <div className="form-field">
                 <label htmlFor="cf-email">Email</label>
