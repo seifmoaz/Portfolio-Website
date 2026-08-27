@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Photo Compressor — max quality, capped file size</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --border: #e2e2df;
+    --text: #1b1b18;
+    --muted: #6b6b64;
+    --accent: #1f6feb;
+    --accent-fg: #ffffff;
+    --good: #1a7f37;
+    --warn: #b45309;
+    --bad: #cf222e;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --panel: #1a1a1a;
+      --border: #2e2e2b;
+      --text: #f0f0ec;
+      --muted: #9a9a92;
+      --accent: #4c9aff;
+      --accent-fg: #08131f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 0.95rem; max-width: 620px; line-height: 1.5; }
+
+  .controls {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input[type="number"], .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    min-width: 110px;
+  }
+  .field.grow { flex: 1; min-width: 200px; }
+
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--panel);
+    margin-bottom: 24px;
+  }
+  .dropzone.drag { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+  .dropzone strong { color: var(--text); }
+  .dropzone input { display: none; }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar .stats { font-size: 0.85rem; color: var(--muted); }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card .thumb {
+    aspect-ratio: 4/3;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .card .name { font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .row { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); }
+  .card .sizes { font-size: 0.85rem; }
+  .card .sizes .from { color: var(--muted); text-decoration: line-through; margin-right: 6px; }
+  .card .sizes .to { font-weight: 700; }
+  .card .sizes .to.good { color: var(--good); }
+  .card .sizes .to.warn { color: var(--warn); }
+  .card .badge {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    align-self: flex-start;
+  }
+  .card .actions { display: flex; gap: 8px; margin-top: 4px; }
+  .card .actions button { flex: 1; }
+  .progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress > div { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 20px 0; text-align: center; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.78rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Photo Compressor</h1>
+    <div class="sub">
+      Runs entirely in your browser — nothing is uploaded anywhere. Drop in photos and each one is
+      re-encoded at the highest quality and resolution that still fits under your size cap.
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="field">
+      <label for="maxSize">Max size (MB)</label>
+      <input id="maxSize" type="number" min="0.1" max="50" step="0.1" value="5" />
+    </div>
+    <div class="field">
+      <label for="format">Output format</label>
+      <select id="format">
+        <option value="auto" selected>Auto (recommended)</option>
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/webp">WebP</option>
+        <option value="image/png">PNG (lossless)</option>
+      </select>
+    </div>
+    <div class="field grow">
+      <label>&nbsp;</label>
+      <div class="sub" style="margin:0;">
+        Auto keeps PNGs lossless when they already fit, uses WebP for the best quality-per-byte otherwise,
+        and only reduces resolution if quality alone can't hit the cap.
+      </div>
+    </div>
+  </div>
+
+  <label class="dropzone" id="dropzone">
+    <input id="fileInput" type="file" accept="image/*" multiple />
+    <div><strong>Click to choose photos</strong> or drag &amp; drop them here</div>
+  </label>
+
+  <div class="toolbar">
+    <div class="stats" id="stats"></div>
+    <div style="display:flex; gap:8px;">
+      <button id="downloadAll" disabled>Download all</button>
+      <button id="clearAll" disabled>Clear</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyState">No photos yet.</div>
+
+  <footer>Processing happens locally on your device. Closing this tab discards everything.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const dropzone = $('dropzone');
+  const fileInput = $('fileInput');
+  const grid = $('grid');
+  const emptyState = $('emptyState');
+  const statsEl = $('stats');
+  const downloadAllBtn = $('downloadAll');
+  const clearAllBtn = $('clearAll');
+  const maxSizeInput = $('maxSize');
+  const formatSelect = $('format');
+
+  let items = [];
+  let webpSupported = null;
+
+  function checkWebpSupport() {
+    if (webpSupported !== null) return webpSupported;
+    const c = document.createElement('canvas');
+    c.width = c.height = 1;
+    webpSupported = c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    return webpSupported;
+  }
+
+  function fmtBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function extFor(mime) {
+    if (mime === 'image/png') return 'png';
+    if (mime === 'image/webp') return 'webp';
+    return 'jpg';
+  }
+
+  function baseName(name) {
+    const i = name.lastIndexOf('.');
+    return i > 0 ? name.slice(0, i) : name;
+  }
+
+  function canvasToBlob(canvas, mime, quality) {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), mime, quality);
+    });
+  }
+
+  function drawScaled(img, scale) {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+
+  // Binary-search the highest quality (up to 1.0) whose encoded size is <= maxBytes.
+  async function bestQualityAtScale(canvas, mime, maxBytes, qMin, qMax, steps) {
+    let lo = qMin, hi = qMax, best = null;
+    // First check the top of the range directly — most photos fit comfortably.
+    let blob = await canvasToBlob(canvas, mime, qMax);
+    if (blob && blob.size <= maxBytes) return { blob, quality: qMax };
+    for (let i = 0; i < steps; i++) {
+      const mid = (lo + hi) / 2;
+      blob = await canvasToBlob(canvas, mime, mid);
+      if (blob && blob.size <= maxBytes) {
+        best = { blob, quality: mid };
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return best;
+  }
+
+  async function hasAlpha(img) {
+    const c = document.createElement('canvas');
+    const w = c.width = Math.min(64, img.width);
+    const h = c.height = Math.min(64, img.height);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 255) return true;
+    }
+    return false;
+  }
+
+  async function compressImage(img, originalType, maxBytes, formatChoice, onProgress) {
+    let mime = formatChoice;
+    if (formatChoice === 'auto') {
+      const alpha = originalType === 'image/png' ? await hasAlpha(img) : false;
+      if (alpha) {
+        // Try lossless PNG first at full size.
+        const canvas = drawScaled(img, 1);
+        const pngBlob = await canvasToBlob(canvas, 'image/png', 1);
+        if (pngBlob && pngBlob.size <= maxBytes) {
+          return { blob: pngBlob, mime: 'image/png', quality: 1, scale: 1, width: canvas.width, height: canvas.height };
+        }
+        mime = checkWebpSupport() ? 'image/webp' : 'image/jpeg';
+      } else {
+        mime = checkWebpSupport() ? 'image/webp' : 'image/jpeg';
+      }
+    } else if (formatChoice === 'image/png') {
+      const canvas = drawScaled(img, 1);
+      const pngBlob = await canvasToBlob(canvas, 'image/png', 1);
+      return { blob: pngBlob, mime: 'image/png', quality: 1, scale: 1, width: canvas.width, height: canvas.height };
+    }
+
+    let scale = 1;
+    let result = null;
+    const maxAttempts = 14;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const canvas = drawScaled(img, scale);
+      const qMax = attempt === 0 ? 1 : 0.95;
+      const found = await bestQualityAtScale(canvas, mime, maxBytes, 0.35, qMax, 7);
+      onProgress(Math.min(0.95, (attempt + 1) / 8));
+      if (found) {
+        result = { blob: found.blob, mime, quality: found.quality, scale, width: canvas.width, height: canvas.height };
+        break;
+      }
+      scale *= 0.85;
+      if (scale < 0.1) break;
+    }
+
+    if (!result) {
+      // Fallback: smallest we could produce, even if still over the cap.
+      const canvas = drawScaled(img, Math.max(scale, 0.1));
+      const blob = await canvasToBlob(canvas, mime, 0.35);
+      result = { blob, mime, quality: 0.35, scale: Math.max(scale, 0.1), width: canvas.width, height: canvas.height, overCap: true };
+    }
+    return result;
+  }
+
+  function makeCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="thumb"><img src="${item.previewUrl}" alt="" /></div>
+      <div class="body">
+        <div class="name" title="${item.file.name}">${item.file.name}</div>
+        <div class="row"><span id="dims-${item.id}">…</span><span class="badge" id="badge-${item.id}">queued</span></div>
+        <div class="progress"><div id="bar-${item.id}"></div></div>
+        <div class="sizes" id="sizes-${item.id}">
+          <span class="from">${fmtBytes(item.file.size)}</span>
+        </div>
+        <div class="actions">
+          <a id="dl-${item.id}" href="#" download style="display:none;"><button class="primary" style="width:100%;" disabled>Download</button></a>
+        </div>
+      </div>
+    `;
+    return card;
+  }
+
+  function updateStats() {
+    const done = items.filter((i) => i.result);
+    if (!done.length) { statsEl.textContent = ''; return; }
+    const origTotal = done.reduce((s, i) => s + i.file.size, 0);
+    const newTotal = done.reduce((s, i) => s + i.result.blob.size, 0);
+    const pct = origTotal ? Math.round((1 - newTotal / origTotal) * 100) : 0;
+    statsEl.textContent = `${done.length}/${items.length} processed · ${fmtBytes(origTotal)} → ${fmtBytes(newTotal)} (${pct >= 0 ? '-' : '+'}${Math.abs(pct)}%)`;
+    downloadAllBtn.disabled = done.length === 0;
+  }
+
+  async function processItem(item) {
+    const maxBytes = Math.max(0.05, parseFloat(maxSizeInput.value) || 5) * 1024 * 1024;
+    const formatChoice = formatSelect.value;
+    const badge = $(`badge-${item.id}`);
+    const bar = $(`bar-${item.id}`);
+    badge.textContent = 'compressing…';
+
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = item.previewUrl;
+    });
+
+    $(`dims-${item.id}`).textContent = `${img.width}×${img.height}`;
+
+    const result = await compressImage(img, item.file.type, maxBytes, formatChoice, (p) => {
+      bar.style.width = Math.round(p * 100) + '%';
+    });
+    bar.style.width = '100%';
+
+    item.result = result;
+    const url = URL.createObjectURL(result.blob);
+    const dl = $(`dl-${item.id}`);
+    dl.href = url;
+    dl.download = `${baseName(item.file.name)}-compressed.${extFor(result.mime)}`;
+    dl.style.display = 'block';
+    dl.querySelector('button').disabled = false;
+
+    const dimsChanged = result.scale < 1;
+    $(`dims-${item.id}`).textContent = `${img.width}×${img.height}` + (dimsChanged ? ` → ${result.width}×${result.height}` : '');
+
+    const sizesEl = $(`sizes-${item.id}`);
+    const toClass = result.overCap ? 'warn' : 'good';
+    sizesEl.innerHTML = `<span class="from">${fmtBytes(item.file.size)}</span><span class="to ${toClass}">${fmtBytes(result.blob.size)}</span>`;
+
+    badge.textContent = result.overCap
+      ? 'below cap not reachable'
+      : `${result.mime.replace('image/', '').toUpperCase()} · q${Math.round(result.quality * 100)}`;
+
+    updateStats();
+  }
+
+  function addFiles(fileList) {
+    const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    emptyState.style.display = 'none';
+    clearAllBtn.disabled = false;
+
+    for (const file of files) {
+      const id = Math.random().toString(36).slice(2);
+      const previewUrl = URL.createObjectURL(file);
+      const item = { id, file, previewUrl, result: null };
+      items.push(item);
+      grid.appendChild(makeCard(item));
+      processItem(item).catch((err) => {
+        $(`badge-${id}`).textContent = 'failed';
+        console.error(err);
+      });
+    }
+    updateStats();
+  }
+
+  dropzone.addEventListener('click', (e) => {
+    if (e.target.closest('input')) return;
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+
+  ['dragenter', 'dragover'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag'); })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    items.forEach((i) => { URL.revokeObjectURL(i.previewUrl); if (i.result) URL.revokeObjectURL(i.result.blob); });
+    items = [];
+    grid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsEl.textContent = '';
+    downloadAllBtn.disabled = true;
+    clearAllBtn.disabled = true;
+    fileInput.value = '';
+  });
+
+  downloadAllBtn.addEventListener('click', async () => {
+    const done = items.filter((i) => i.result);
+    for (let i = 0; i < done.length; i++) {
+      const item = done[i];
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(item.result.blob);
+      a.download = `${baseName(item.file.name)}-compressed.${extFor(item.result.mime)}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  });
+})();
+</script>
+</body>
+</html>
