@@ -6,10 +6,20 @@ import TestimonialCarousel from "@/components/TestimonialCarousel";
 import NotionMedia from "@/components/NotionMedia";
 import ScrollToTop from "@/components/ScrollToTop";
 import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
+import MomentVideo from "@/components/MomentVideo";
 import { mediaSrc } from "@/lib/notion-media";
-import { getLogos, getPhotographyItems } from "@/lib/notion";
+import { getLogos, getPhotographyItems, getMoments } from "@/lib/notion";
 
 export const revalidate = 60;
+
+const PLACEHOLDER_MOMENTS = [
+  { id: "shot-01", size: "700/900", caption: <><b>Adidas</b> — Season launch, on-location detail shot.</> },
+  { id: "shot-02", size: "900/600", caption: <><b>Flow State</b> — Grit &amp; Gloss campaign, wide establishing shot.</> },
+  { id: "shot-03", size: "700/700", caption: <><b>Puma</b> — Training capsule, product-in-motion still.</> },
+  { id: "shot-04", size: "700/1000", caption: <><b>Salomon</b> — Trail campaign, portrait close-up.</> },
+  { id: "shot-05", size: "900/550", caption: <><b>Gig</b> — Content campaign, behind-the-scenes b-roll frame.</> },
+  { id: "shot-06", size: "700/850", caption: <><b>Craghoppers</b> — Outdoor gear shoot, environmental portrait.</> },
+];
 
 const PLACEHOLDER_REEL: PinItem[] = [
   { key: "seif-fashion-01", src: "https://picsum.photos/seed/seif-fashion-01/700/900", alt: "Editorial fashion photography" },
@@ -35,7 +45,7 @@ function pickRandom<T>(items: T[], count: number): T[] {
 }
 
 export default async function HomePage() {
-  const [logos, photos] = await Promise.all([getLogos(), getPhotographyItems()]);
+  const [logos, photos, moments] = await Promise.all([getLogos(), getPhotographyItems(), getMoments()]);
   const reelItems: PinItem[] =
     photos.length === 0
       ? PLACEHOLDER_REEL
@@ -110,32 +120,26 @@ export default async function HomePage() {
             <h2>Moments from recent campaigns</h2>
           </div>
           <div className="shots-masonry">
-            {[
-              { seed: "shot-01", size: "700/900", caption: <><b>Adidas</b> — Season launch, on-location detail shot.</> },
-              { seed: "shot-02", size: "900/600", caption: <><b>Flow State</b> — Grit &amp; Gloss campaign, wide establishing shot.</> },
-              { seed: "shot-03", size: "700/700", caption: <><b>Puma</b> — Training capsule, product-in-motion still.</> },
-              { seed: "shot-04", size: "700/1000", caption: <><b>Salomon</b> — Trail campaign, portrait close-up.</> },
-              { seed: "shot-05", size: "900/550", caption: <><b>Gig</b> — Content campaign, behind-the-scenes b-roll frame.</> },
-              { seed: "shot-06", size: "700/850", caption: <><b>Craghoppers</b> — Outdoor gear shoot, environmental portrait.</> },
-            ].map((shot) => (
-              <div className="shot-item" key={shot.seed}>
-                <div className="shot-media">
-                  <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    poster={`https://picsum.photos/seed/${shot.seed}/${shot.size}`}
-                  >
-                    <source
-                      src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                      type="video/mp4"
-                    />
-                  </video>
-                </div>
-                <p className="shot-caption">{shot.caption}</p>
-              </div>
-            ))}
+            {moments.length === 0
+              ? PLACEHOLDER_MOMENTS.map((shot) => (
+                  <div className="shot-item" key={shot.id}>
+                    <div className="shot-media">
+                      <MomentVideo
+                        src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                        poster={`https://picsum.photos/seed/${shot.id}/${shot.size}`}
+                      />
+                    </div>
+                    <p className="shot-caption">{shot.caption}</p>
+                  </div>
+                ))
+              : moments.map((moment) => (
+                  <div className="shot-item" key={moment.id}>
+                    <div className="shot-media">
+                      <MomentVideo src={moment.videoUrl} />
+                    </div>
+                    {moment.caption && <p className="shot-caption">{moment.caption}</p>}
+                  </div>
+                ))}
           </div>
         </Reveal>
 

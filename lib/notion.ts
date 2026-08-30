@@ -40,6 +40,8 @@ export type WorkProject = {
   cover: MediaRef | null;
   gallery: MediaRef[];
   showcaseVideos: ShowcaseVideo[];
+  momentVideoUrl: string | null;
+  momentCaption: string;
 };
 
 export type PhotographyItem = {
@@ -178,6 +180,8 @@ export async function getWorkProjects(): Promise<WorkProject[]> {
       cover: toMediaRef(page, "Cover"),
       gallery: toMediaRefs(page, "Gallery"),
       showcaseVideos: getShowcaseVideos(page, "Video URLs"),
+      momentVideoUrl: getUrl(page, "Moment Video URL"),
+      momentCaption: getRichText(page, "Moment Caption"),
     };
   });
 }
@@ -185,6 +189,23 @@ export async function getWorkProjects(): Promise<WorkProject[]> {
 export async function getWorkProjectBySlug(slug: string): Promise<WorkProject | null> {
   const projects = await getWorkProjects();
   return projects.find((p) => p.slug === slug) ?? null;
+}
+
+export type Moment = {
+  id: string;
+  videoUrl: string;
+  caption: string;
+};
+
+// "Moments from recent campaigns" on the home page — a curated handful of
+// muted b-roll clips pulled straight from Work Projects, rather than a
+// separate database, since each one is naturally tied to a real project.
+export async function getMoments(limit = 6): Promise<Moment[]> {
+  const projects = await getWorkProjects();
+  return projects
+    .filter((p): p is WorkProject & { momentVideoUrl: string } => Boolean(p.momentVideoUrl))
+    .slice(0, limit)
+    .map((p) => ({ id: p.id, videoUrl: p.momentVideoUrl, caption: p.momentCaption }));
 }
 
 export async function getPhotographyItems(): Promise<PhotographyItem[]> {
