@@ -4,15 +4,29 @@ import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import NotionMedia from "@/components/NotionMedia";
-import { getLogos } from "@/lib/notion";
+import ScrollToTop from "@/components/ScrollToTop";
+import { getLogos, getPhotographyItems } from "@/lib/notion";
 
 export const revalidate = 60;
 
+const PLACEHOLDER_REEL = [
+  { seed: "seif-fashion-01", size: "700/900", alt: "Editorial fashion photography" },
+  { seed: "seif-fnb-01", size: "900/600", alt: "F&B photography" },
+  { seed: "seif-event-01", size: "700/700", alt: "Event photography" },
+  { seed: "seif-fashion-03", size: "700/1000", alt: "Fashion campaign" },
+  { seed: "seif-fnb-02", size: "900/550", alt: "F&B detail" },
+  { seed: "seif-event-02", size: "700/850", alt: "Event portrait" },
+  { seed: "seif-fashion-04", size: "700/900", alt: "Fashion lifestyle" },
+  { seed: "seif-fnb-03", size: "900/650", alt: "F&B ambience" },
+];
+
 export default async function HomePage() {
-  const logos = await getLogos();
+  const [logos, photos] = await Promise.all([getLogos(), getPhotographyItems()]);
+  const reelItems = photos.slice(0, 8);
 
   return (
     <>
+      <ScrollToTop />
       <Header active="home" transparent />
 
       <main>
@@ -108,14 +122,17 @@ export default async function HomePage() {
             <h2>Photography</h2>
           </div>
           <div className="reel-masonry">
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fashion-01/700/900" alt="Editorial fashion photography" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fnb-01/900/600" alt="F&B photography" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-event-01/700/700" alt="Event photography" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fashion-03/700/1000" alt="Fashion campaign" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fnb-02/900/550" alt="F&B detail" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-event-02/700/850" alt="Event portrait" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fashion-04/700/900" alt="Fashion lifestyle" /></div>
-            <div className="reel-item"><img src="https://picsum.photos/seed/seif-fnb-03/900/650" alt="F&B ambience" /></div>
+            {reelItems.length === 0
+              ? PLACEHOLDER_REEL.map((item) => (
+                  <div className="reel-item" key={item.seed}>
+                    <img src={`https://picsum.photos/seed/${item.seed}/${item.size}`} alt={item.alt} />
+                  </div>
+                ))
+              : reelItems.map((item) => (
+                  <div className="reel-item" key={item.id}>
+                    <NotionMedia media={item.image} alt={item.caption || "Photograph"} />
+                  </div>
+                ))}
           </div>
           <div className="view-all-wrap">
             <Link className="view-all" href="/photography">View full archive →</Link>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NotionMedia from "@/components/NotionMedia";
+import ScrollToTop from "@/components/ScrollToTop";
 import { mediaSrc } from "@/lib/notion-media";
 import { getWorkProjectBySlug, getWorkProjects } from "@/lib/notion";
 
@@ -26,6 +27,7 @@ export default async function ProjectPage({
 
   return (
     <>
+      <ScrollToTop />
       <Header active="work" />
       <main>
         <section className="project-head">

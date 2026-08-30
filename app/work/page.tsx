@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NotionMedia from "@/components/NotionMedia";
+import ScrollToTop from "@/components/ScrollToTop";
 import { getWorkProjects, type WorkProject } from "@/lib/notion";
 
 export const revalidate = 60;
@@ -52,6 +53,7 @@ export default async function WorkPage() {
 
   return (
     <>
+      <ScrollToTop />
       <Header active="work" />
       <main>
         <section className="wrap page-head">
