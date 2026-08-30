@@ -58,6 +58,29 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const contactHref = active === "home" ? "#contact" : "/#contact";
 
+  // Next.js's client-side routing uses history.pushState, which never fires
+  // the browser's native hashchange event, and a same-pathname navigation
+  // doesn't remount the page — so a passive "scroll on mount" effect can't
+  // catch "click Contact/Home again while already on the home page". Handle
+  // it directly here instead: clicking a nav item for the page you're
+  // already on is a no-op, and Contact scrolls immediately when we're
+  // already on the page that contains it.
+  const handleNavClick = (key: NavKey) => (e: React.MouseEvent) => {
+    if (key === active) e.preventDefault();
+  };
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    if (active === "home") {
+      e.preventDefault();
+      // `html{scroll-behavior:smooth}` makes an unqualified/"smooth" scroll
+      // here unreliable (it can silently no-op) — force instant, same fix
+      // as ScrollToTop.
+      document
+        .getElementById("contact")
+        ?.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "start" });
+    }
+  };
+
   useEffect(() => {
     if (!transparent) return;
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -94,20 +117,26 @@ export default function Header({
               </span>
             </button>
             <div className="logo-mark">
-              <Link href="/" style={{ display: "flex" }}>
+              <Link href="/" style={{ display: "flex" }} onClick={handleNavClick("home")}>
                 <img src="/logo.png" alt="Seif Moaz" className="logo-img" />
               </Link>
             </div>
             <ul className="nav-links">
               {NAV_LINKS.map((link) => (
                 <li key={link.key}>
-                  <Link href={link.href} className={active === link.key ? "active" : undefined}>
+                  <Link
+                    href={link.href}
+                    className={active === link.key ? "active" : undefined}
+                    onClick={handleNavClick(link.key)}
+                  >
                     {link.label}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link href={contactHref}>Contact</Link>
+                <Link href={contactHref} onClick={handleContactClick}>
+                  Contact
+                </Link>
               </li>
             </ul>
             <div className="nav-social">
@@ -125,14 +154,23 @@ export default function Header({
                 <Link
                   href={link.href}
                   className={active === link.key ? "active" : undefined}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(link.key)(e);
+                    setMenuOpen(false);
+                  }}
                 >
                   {link.label}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href={contactHref} onClick={() => setMenuOpen(false)}>
+              <Link
+                href={contactHref}
+                onClick={(e) => {
+                  handleContactClick(e);
+                  setMenuOpen(false);
+                }}
+              >
                 Contact
               </Link>
             </li>
