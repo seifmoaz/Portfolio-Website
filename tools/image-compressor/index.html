@@ -397,16 +397,25 @@
 
     $(`dims-${item.id}`).textContent = `${img.width}×${img.height}`;
 
-    const result = await compressImage(img, item.file.type, maxBytes, formatChoice, (p) => {
+    let result = await compressImage(img, item.file.type, maxBytes, formatChoice, (p) => {
       bar.style.width = Math.round(p * 100) + '%';
     });
     bar.style.width = '100%';
+
+    // Never hand back something bigger than what came in — if the original already
+    // fits under the cap and beats whatever we just produced, just keep the original.
+    let passthrough = false;
+    if (!result.overCap && item.file.size <= maxBytes && item.file.size <= result.blob.size) {
+      result = { blob: item.file, mime: item.file.type, quality: 1, scale: 1, width: img.width, height: img.height };
+      passthrough = true;
+    }
 
     item.result = result;
     const url = URL.createObjectURL(result.blob);
     const dl = $(`dl-${item.id}`);
     dl.href = url;
-    dl.download = `${baseName(item.file.name)}-compressed.${extFor(result.mime)}`;
+    const ext = passthrough ? (item.file.name.split('.').pop() || extFor(result.mime)) : extFor(result.mime);
+    dl.download = `${baseName(item.file.name)}-compressed.${ext}`;
     dl.style.display = 'block';
     dl.querySelector('button').disabled = false;
 
@@ -419,7 +428,9 @@
 
     badge.textContent = result.overCap
       ? 'below cap not reachable'
-      : `${result.mime.replace('image/', '').toUpperCase()} · q${Math.round(result.quality * 100)}`;
+      : passthrough
+        ? 'already optimal'
+        : `${result.mime.replace('image/', '').toUpperCase()} · q${Math.round(result.quality * 100)}`;
 
     updateStats();
   }
@@ -444,10 +455,6 @@
     updateStats();
   }
 
-  dropzone.addEventListener('click', (e) => {
-    if (e.target.closest('input')) return;
-    fileInput.click();
-  });
   fileInput.addEventListener('change', (e) => addFiles(e.target.files));
 
   ['dragenter', 'dragover'].forEach((evt) =>
