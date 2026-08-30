@@ -21,6 +21,14 @@ export type LogoItem = {
 
 export type WorkCategory = "F&B" | "Brand Content" | "Event Coverage";
 
+// A client deliverable meant to be watched with sound/controls, hosted on
+// Bunny Stream rather than uploaded to Notion — HLS gives it real
+// adaptive-bitrate streaming, which a decorative muted loop doesn't need.
+export type ShowcaseVideo = {
+  url: string;
+  poster: string | null;
+};
+
 export type WorkProject = {
   id: string;
   name: string;
@@ -31,6 +39,7 @@ export type WorkProject = {
   client: string;
   cover: MediaRef | null;
   gallery: MediaRef[];
+  showcaseVideos: ShowcaseVideo[];
 };
 
 export type PhotographyItem = {
@@ -96,6 +105,28 @@ function toMediaRef(page: PageObjectResponse, prop: string): MediaRef | null {
   return toMediaRefs(page, prop)[0] ?? null;
 }
 
+// Bunny Stream serves a thumbnail at the same path as the HLS playlist,
+// just with the filename swapped — derive it so a poster shows immediately
+// instead of a blank player before the visitor presses play.
+function deriveBunnyThumbnail(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.pathname.endsWith("/playlist.m3u8")) return null;
+    parsed.pathname = parsed.pathname.replace(/playlist\.m3u8$/, "thumbnail.jpg");
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function getShowcaseVideos(page: PageObjectResponse, prop: string): ShowcaseVideo[] {
+  return getRichText(page, prop)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((url) => ({ url, poster: deriveBunnyThumbnail(url) }));
+}
+
 function slugify(input: string): string {
   return input
     .toLowerCase()
@@ -146,6 +177,7 @@ export async function getWorkProjects(): Promise<WorkProject[]> {
       client: getRichText(page, "Client"),
       cover: toMediaRef(page, "Cover"),
       gallery: toMediaRefs(page, "Gallery"),
+      showcaseVideos: getShowcaseVideos(page, "Video URLs"),
     };
   });
 }

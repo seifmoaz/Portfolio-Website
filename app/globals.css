@@ -408,6 +408,16 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 .project-meta div b{ display:block; color:var(--ink); font-size:14px; text-transform:none; letter-spacing:0; margin-top:4px; font-weight:600; }
 .project-desc{ color:var(--ink-soft); font-size:15.5px; max-width:640px; margin:22px 0 0; }
 
+/* Client-deliverable showcase videos: full width, real controls/audio,
+   letterboxed (not cropped) since these are the actual work being shown. */
+.showcase{ padding-top:60px; }
+.showcase-videos{ display:flex; flex-direction:column; gap:32px; }
+.showcase-video{
+  width:100%; aspect-ratio:16/9; border-radius:8px; overflow:hidden;
+  border:1px solid var(--line); background:#000;
+}
+.showcase-video video{ width:100%; height:100%; object-fit:contain; display:block; background:#000; }
+
 .gallery{ padding-top:60px; padding-bottom:100px; }
 .gallery-masonry{ column-count:3; column-gap:24px; }
 .gallery-item{ break-inside:avoid; margin-bottom:24px; border-radius:8px; overflow:hidden; border:1px solid var(--line); transition:border-color .25s ease; }
