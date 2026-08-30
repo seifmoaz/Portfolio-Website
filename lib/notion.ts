@@ -40,8 +40,6 @@ export type WorkProject = {
   cover: MediaRef | null;
   gallery: MediaRef[];
   showcaseVideos: ShowcaseVideo[];
-  momentVideoUrl: string | null;
-  momentCaption: string;
 };
 
 export type PhotographyItem = {
@@ -90,6 +88,11 @@ function getSelectName(page: PageObjectResponse, prop: string): string {
 function getUrl(page: PageObjectResponse, prop: string): string | null {
   const p = page.properties[prop];
   return p?.type === "url" ? p.url : null;
+}
+
+function getRelationIds(page: PageObjectResponse, prop: string): string[] {
+  const p = page.properties[prop];
+  return p?.type === "relation" ? p.relation.map((r) => r.id) : [];
 }
 
 function toMediaRefs(page: PageObjectResponse, prop: string): MediaRef[] {
@@ -180,8 +183,6 @@ export async function getWorkProjects(): Promise<WorkProject[]> {
       cover: toMediaRef(page, "Cover"),
       gallery: toMediaRefs(page, "Gallery"),
       showcaseVideos: getShowcaseVideos(page, "Video URLs"),
-      momentVideoUrl: getUrl(page, "Moment Video URL"),
-      momentCaption: getRichText(page, "Moment Caption"),
     };
   });
 }
@@ -195,17 +196,34 @@ export type Moment = {
   id: string;
   videoUrl: string;
   caption: string;
+  projectSlug: string | null;
 };
 
-// "Moments from recent campaigns" on the home page — a curated handful of
-// muted b-roll clips pulled straight from Work Projects, rather than a
-// separate database, since each one is naturally tied to a real project.
+// "Moments from recent campaigns" on the home page — its own database so
+// each clip can be reordered/added independently of a project's own
+// gallery, linked to a Work Project via a relation so clicking one takes
+// the visitor to that project's page.
 export async function getMoments(limit = 6): Promise<Moment[]> {
-  const projects = await getWorkProjects();
-  return projects
-    .filter((p): p is WorkProject & { momentVideoUrl: string } => Boolean(p.momentVideoUrl))
-    .slice(0, limit)
-    .map((p) => ({ id: p.id, videoUrl: p.momentVideoUrl, caption: p.momentCaption }));
+  const [rows, projects] = await Promise.all([
+    queryPublishedRows(process.env.NOTION_MOMENTS_DB_ID),
+    getWorkProjects(),
+  ]);
+  const slugByProjectId = new Map(projects.map((p) => [p.id, p.slug]));
+
+  return rows
+    .map((page) => {
+      const videoUrl = getUrl(page, "Video URL");
+      if (!videoUrl) return null;
+      const [projectId] = getRelationIds(page, "Project");
+      return {
+        id: page.id,
+        videoUrl,
+        caption: getTitle(page, "Caption"),
+        projectSlug: projectId ? (slugByProjectId.get(projectId) ?? null) : null,
+      };
+    })
+    .filter((m): m is Moment => m !== null)
+    .slice(0, limit);
 }
 
 export async function getPhotographyItems(): Promise<PhotographyItem[]> {

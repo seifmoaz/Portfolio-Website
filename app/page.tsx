@@ -132,14 +132,25 @@ export default async function HomePage() {
                     <p className="shot-caption">{shot.caption}</p>
                   </div>
                 ))
-              : moments.map((moment) => (
-                  <div className="shot-item" key={moment.id}>
-                    <div className="shot-media">
-                      <MomentVideo src={moment.videoUrl} />
+              : moments.map((moment) => {
+                  const content = (
+                    <>
+                      <div className="shot-media">
+                        <MomentVideo src={moment.videoUrl} />
+                      </div>
+                      {moment.caption && <p className="shot-caption">{moment.caption}</p>}
+                    </>
+                  );
+                  return moment.projectSlug ? (
+                    <Link className="shot-item" href={`/work/${moment.projectSlug}`} key={moment.id}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <div className="shot-item" key={moment.id}>
+                      {content}
                     </div>
-                    {moment.caption && <p className="shot-caption">{moment.caption}</p>}
-                  </div>
-                ))}
+                  );
+                })}
           </div>
         </Reveal>
 
