@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 export type PinItem = {
   key: string;
@@ -9,72 +9,138 @@ export type PinItem = {
   isVideo?: boolean;
 };
 
-const ROW_UNIT = 6; // px — must match .pin-grid's grid-auto-rows in globals.css
 const DEFAULT_RATIO = 0.8; // portrait-ish guess used before an item's real size is known
 
-function spanForRatio(ratio: number, maxCols: number): number {
-  if (ratio >= 1.9) return Math.min(3, maxCols);
-  if (ratio >= 1.2) return Math.min(2, maxCols);
+function columnsForWidth(width: number): number {
+  if (width <= 760) return 2;
+  if (width <= 1100) return 4;
+  return 6;
+}
+
+function spanForRatio(ratio: number, numColumns: number): number {
+  if (ratio >= 1.9) return Math.min(3, numColumns);
+  if (ratio >= 1.2) return Math.min(2, numColumns);
   return 1;
+}
+
+type Placement = { key: string; left: number; top: number; width: number; height: number };
+
+// True skyline/masonry placement: each item goes at the lowest possible
+// position for its column-span, and only the columns it actually occupies
+// are pushed down. Unlike CSS Grid's row-based auto-placement (even with
+// grid-auto-flow: dense, which is a greedy row scan, not a real 2D packer),
+// this can't leave an unfilled hole — every column is a contiguous stack.
+function layoutMasonry(
+  items: { key: string; ratio: number }[],
+  numColumns: number,
+  containerWidth: number,
+  gap: number,
+): { placements: Placement[]; height: number } {
+  const colWidth = (containerWidth - (numColumns - 1) * gap) / numColumns;
+  const colBottoms = new Array(numColumns).fill(0);
+  const placements: Placement[] = [];
+
+  for (const item of items) {
+    const span = spanForRatio(item.ratio, numColumns);
+    let bestStart = 0;
+    let bestTop = Infinity;
+    for (let start = 0; start <= numColumns - span; start++) {
+      const top = Math.max(...colBottoms.slice(start, start + span));
+      if (top < bestTop) {
+        bestTop = top;
+        bestStart = start;
+      }
+    }
+    const width = span * colWidth + (span - 1) * gap;
+    const height = width / item.ratio;
+    placements.push({ key: item.key, left: bestStart * (colWidth + gap), top: bestTop, width, height });
+    const newBottom = bestTop + height + gap;
+    for (let c = bestStart; c < bestStart + span; c++) colBottoms[c] = newBottom;
+  }
+
+  return { placements, height: Math.max(0, ...colBottoms) - gap };
 }
 
 export default function PinterestGrid({ items }: { items: PinItem[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ratios, setRatios] = useState<Record<string, number>>({});
-  const [metrics, setMetrics] = useState<{ colWidth: number; gap: number; count: number } | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const videoObservers = useRef<Map<string, IntersectionObserver>>(new Map());
 
   const measure = useCallback(() => {
     const el = containerRef.current;
-    if (!el) return;
-    const cs = getComputedStyle(el);
-    const cols = cs.gridTemplateColumns
-      .split(" ")
-      .map((v) => parseFloat(v))
-      .filter((n) => !Number.isNaN(n));
-    const gap = parseFloat(cs.columnGap || "0") || 0;
-    if (cols.length > 0) setMetrics({ colWidth: cols[0], gap, count: cols.length });
+    if (el) setContainerWidth(el.clientWidth);
   }, []);
 
   useEffect(() => {
     measure();
     const ro = new ResizeObserver(measure);
     if (containerRef.current) ro.observe(containerRef.current);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
+    return () => ro.disconnect();
   }, [measure]);
+
+  // Clean up any still-attached video observers when the whole grid unmounts.
+  useEffect(() => {
+    const observers = videoObservers.current;
+    return () => observers.forEach((io) => io.disconnect());
+  }, []);
 
   const recordRatio = (key: string, ratio: number) => {
     if (!ratio || !Number.isFinite(ratio)) return;
     setRatios((prev) => (prev[key] ? prev : { ...prev, [key]: ratio }));
   };
 
+  // Plays a video only while it's actually in (or near) the viewport, rather
+  // than every video on the grid trying to autoplay/download at once.
+  const attachVideoRef = (key: string) => (video: HTMLVideoElement | null) => {
+    videoObservers.current.get(key)?.disconnect();
+    videoObservers.current.delete(key);
+    if (!video) return;
+    if (video.readyState >= 1 && video.videoWidth && video.videoHeight) {
+      recordRatio(key, video.videoWidth / video.videoHeight);
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(video);
+    videoObservers.current.set(key, io);
+  };
+
+  const numColumns = containerWidth > 0 ? columnsForWidth(containerWidth) : 6;
+  const gap = numColumns <= 2 ? 14 : 22;
+
+  const { placements, height } = useMemo(() => {
+    if (!containerWidth) return { placements: [] as Placement[], height: 0 };
+    const withRatios = items.map((item) => ({ key: item.key, ratio: ratios[item.key] ?? DEFAULT_RATIO }));
+    return layoutMasonry(withRatios, numColumns, containerWidth, gap);
+  }, [items, ratios, numColumns, containerWidth, gap]);
+
+  const placementByKey = useMemo(() => {
+    const map = new Map<string, Placement>();
+    placements.forEach((p) => map.set(p.key, p));
+    return map;
+  }, [placements]);
+
   return (
-    <div className="pin-grid" ref={containerRef}>
+    <div className="pin-grid" ref={containerRef} style={{ position: "relative", height }}>
       {items.map((item) => {
-        const ratio = ratios[item.key] ?? DEFAULT_RATIO;
-        const colSpan = metrics ? spanForRatio(ratio, metrics.count) : 1;
-        let rowSpan = 34;
-        if (metrics) {
-          const itemWidth = colSpan * metrics.colWidth + (colSpan - 1) * metrics.gap;
-          const itemHeight = itemWidth / ratio;
-          rowSpan = Math.max(1, Math.ceil((itemHeight + metrics.gap) / (ROW_UNIT + metrics.gap)));
-        }
+        const p = placementByKey.get(item.key);
+        const style: CSSProperties = p
+          ? { position: "absolute", left: p.left, top: p.top, width: p.width, height: p.height }
+          : { position: "absolute", visibility: "hidden" };
         return (
-          <div key={item.key} className="pin-item" style={{ gridColumn: `span ${colSpan}`, gridRow: `span ${rowSpan}` }}>
+          <div key={item.key} className="pin-item" style={style}>
             {item.isVideo ? (
               <video
                 muted
                 loop
                 playsInline
-                autoPlay
-                ref={(v) => {
-                  if (v && v.readyState >= 1 && v.videoWidth && v.videoHeight) {
-                    recordRatio(item.key, v.videoWidth / v.videoHeight);
-                  }
-                }}
+                preload="metadata"
+                ref={attachVideoRef(item.key)}
                 onLoadedMetadata={(e) => {
                   const v = e.currentTarget;
                   if (v.videoWidth && v.videoHeight) recordRatio(item.key, v.videoWidth / v.videoHeight);
@@ -86,6 +152,8 @@ export default function PinterestGrid({ items }: { items: PinItem[] }) {
               <img
                 src={item.src}
                 alt={item.alt}
+                loading="lazy"
+                decoding="async"
                 ref={(img) => {
                   if (img && img.complete && img.naturalWidth && img.naturalHeight) {
                     recordRatio(item.key, img.naturalWidth / img.naturalHeight);

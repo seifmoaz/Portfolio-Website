@@ -14,7 +14,7 @@ function ProjectCard({ project }: { project: WorkProject }) {
   return (
     <Link className="project-card" href={`/work/${project.slug}`}>
       <div className="project-card-media">
-        {project.cover && <NotionMedia media={project.cover} alt={project.name} />}
+        {project.cover && <NotionMedia media={project.cover} alt={project.name} width={700} />}
         {hasVideo && (
           <div className="play-dot">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">

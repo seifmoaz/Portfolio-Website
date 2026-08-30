@@ -29,7 +29,7 @@ export default async function PhotographyPage() {
           .filter((item) => item.image)
           .map((item) => ({
             key: item.id,
-            src: mediaSrc(item.image)!,
+            src: mediaSrc(item.image, { width: 1400 })!,
             alt: item.caption || "Photograph",
             isVideo: item.image!.isVideo,
           }));

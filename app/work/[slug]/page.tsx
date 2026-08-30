@@ -23,7 +23,7 @@ export default async function ProjectPage({
   const project = await getWorkProjectBySlug(slug);
   if (!project) notFound();
 
-  const coverSrc = mediaSrc(project.cover);
+  const coverSrc = mediaSrc(project.cover, { width: 1920 });
 
   return (
     <>
@@ -67,7 +67,7 @@ export default async function ProjectPage({
             <div className="gallery-masonry">
               {project.gallery.map((media) => (
                 <div className="gallery-item" key={`${media.property}-${media.index}`}>
-                  <NotionMedia media={media} alt={project.name} />
+                  <NotionMedia media={media} alt={project.name} width={1400} />
                 </div>
               ))}
             </div>

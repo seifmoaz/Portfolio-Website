@@ -205,13 +205,6 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
 /* ============ HOME: PROJECT REEL ============ */
 .reel{ border-top:1px solid var(--line-soft); padding-top:100px; padding-bottom:90px; }
 .reel .section-head{ margin-bottom:52px; }
-.reel-masonry{ column-count:3; column-gap:28px; }
-.reel-item{ break-inside:avoid; margin-bottom:28px; border-radius:8px; overflow:hidden; border:1px solid var(--line); transition:border-color .25s ease; }
-.reel-item:hover{ border-color:var(--accent); }
-.reel-item img{ width:100%; height:auto; display:block; filter:saturate(0.92); transition:transform .6s cubic-bezier(.16,1,.3,1); }
-.reel-item:hover img{ transform:scale(1.03); }
-@media (max-width:1000px){ .reel-masonry{ column-count:2; } }
-@media (max-width:480px){ .reel-masonry{ column-gap:14px; } }
 .view-all-wrap{ text-align:center; padding-top:24px; }
 .view-all{ font-size:13px; letter-spacing:0.08em; text-transform:uppercase; font-weight:500; color:var(--ink); text-decoration:none; border-bottom:1px solid var(--ink); padding-bottom:3px; transition:color .2s ease, border-color .2s ease; }
 .view-all:hover{ color:var(--accent); border-color:var(--accent); }
@@ -435,10 +428,11 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 }
 
 /* ============ PHOTOGRAPHY (aspect-ratio-driven pinterest grid) ============ */
+/* Layout (column count, item position/size) is computed in JS via a real
+   masonry algorithm — see components/PinterestGrid.tsx — since CSS Grid's
+   auto-placement (even with grid-auto-flow: dense) is a greedy row scan,
+   not a true 2D packer, and can leave holes with mixed row/column spans. */
 .photo-gallery{ padding-top:70px; padding-bottom:100px; }
-.pin-grid{
-  display:grid; grid-template-columns:repeat(6, 1fr); grid-auto-rows:6px; grid-auto-flow:dense; gap:22px;
-}
 .pin-item{
   overflow:hidden; border-radius:4px; border:1px solid var(--line);
   transition:border-color .25s ease;
@@ -446,8 +440,6 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 .pin-item:hover{ border-color:var(--accent); }
 .pin-item img, .pin-item video{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(0.92); transition:transform .5s cubic-bezier(.16,1,.3,1); }
 .pin-item:hover img, .pin-item:hover video{ transform:scale(1.03); }
-@media (max-width:1100px){ .pin-grid{ grid-template-columns:repeat(4, 1fr); } }
-@media (max-width:760px){ .pin-grid{ grid-template-columns:repeat(2, 1fr); gap:14px; } }
 
 /* ============ SHOP ============ */
 .coming-soon{

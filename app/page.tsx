@@ -5,24 +5,46 @@ import Reveal from "@/components/Reveal";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import NotionMedia from "@/components/NotionMedia";
 import ScrollToTop from "@/components/ScrollToTop";
+import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
+import { mediaSrc } from "@/lib/notion-media";
 import { getLogos, getPhotographyItems } from "@/lib/notion";
 
 export const revalidate = 60;
 
-const PLACEHOLDER_REEL = [
-  { seed: "seif-fashion-01", size: "700/900", alt: "Editorial fashion photography" },
-  { seed: "seif-fnb-01", size: "900/600", alt: "F&B photography" },
-  { seed: "seif-event-01", size: "700/700", alt: "Event photography" },
-  { seed: "seif-fashion-03", size: "700/1000", alt: "Fashion campaign" },
-  { seed: "seif-fnb-02", size: "900/550", alt: "F&B detail" },
-  { seed: "seif-event-02", size: "700/850", alt: "Event portrait" },
-  { seed: "seif-fashion-04", size: "700/900", alt: "Fashion lifestyle" },
-  { seed: "seif-fnb-03", size: "900/650", alt: "F&B ambience" },
+const PLACEHOLDER_REEL: PinItem[] = [
+  { key: "seif-fashion-01", src: "https://picsum.photos/seed/seif-fashion-01/700/900", alt: "Editorial fashion photography" },
+  { key: "seif-fnb-01", src: "https://picsum.photos/seed/seif-fnb-01/900/600", alt: "F&B photography" },
+  { key: "seif-event-01", src: "https://picsum.photos/seed/seif-event-01/700/700", alt: "Event photography" },
+  { key: "seif-fashion-03", src: "https://picsum.photos/seed/seif-fashion-03/700/1000", alt: "Fashion campaign" },
+  { key: "seif-fnb-02", src: "https://picsum.photos/seed/seif-fnb-02/900/550", alt: "F&B detail" },
+  { key: "seif-event-02", src: "https://picsum.photos/seed/seif-event-02/700/850", alt: "Event portrait" },
+  { key: "seif-fashion-04", src: "https://picsum.photos/seed/seif-fashion-04/700/900", alt: "Fashion lifestyle" },
+  { key: "seif-fnb-03", src: "https://picsum.photos/seed/seif-fnb-03/900/650", alt: "F&B ambience" },
 ];
+
+// A dense grid packs cleanly regardless of count, but pulling too few
+// photos still leaves the section looking sparse — and always showing the
+// same fixed few gets stale as more get added. Shuffle and take a chunk.
+function pickRandom<T>(items: T[], count: number): T[] {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+}
 
 export default async function HomePage() {
   const [logos, photos] = await Promise.all([getLogos(), getPhotographyItems()]);
-  const reelItems = photos.slice(0, 8);
+  const reelItems: PinItem[] =
+    photos.length === 0
+      ? PLACEHOLDER_REEL
+      : pickRandom(photos, Math.min(photos.length, 14)).map((item) => ({
+          key: item.id,
+          src: mediaSrc(item.image, { width: 1400 })!,
+          alt: item.caption || "Photograph",
+          isVideo: item.image?.isVideo,
+        }));
 
   return (
     <>
@@ -121,19 +143,7 @@ export default async function HomePage() {
           <div className="section-head">
             <h2>Photography</h2>
           </div>
-          <div className="reel-masonry">
-            {reelItems.length === 0
-              ? PLACEHOLDER_REEL.map((item) => (
-                  <div className="reel-item" key={item.seed}>
-                    <img src={`https://picsum.photos/seed/${item.seed}/${item.size}`} alt={item.alt} />
-                  </div>
-                ))
-              : reelItems.map((item) => (
-                  <div className="reel-item" key={item.id}>
-                    <NotionMedia media={item.image} alt={item.caption || "Photograph"} />
-                  </div>
-                ))}
-          </div>
+          <PinterestGrid items={reelItems} />
           <div className="view-all-wrap">
             <Link className="view-all" href="/photography">View full archive →</Link>
           </div>
