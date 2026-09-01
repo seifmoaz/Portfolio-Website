@@ -214,7 +214,7 @@ export async function getMoments(limit = 6): Promise<Moment[]> {
     .map((page) => {
       const videoUrl = getUrl(page, "Video URL");
       if (!videoUrl) return null;
-      const [projectId] = getRelationIds(page, "Project");
+      const [projectId] = getRelationIds(page, "Projects");
       return {
         id: page.id,
         videoUrl,
