@@ -71,12 +71,14 @@ export default async function ProjectPage({
           </section>
         )}
 
-        <section className="wrap gallery">
-          {project.gallery.length === 0 ? (
+        {project.gallery.length === 0 && project.showcaseVideos.length === 0 ? (
+          <section className="wrap gallery">
             <p className="empty-state">
-              No gallery media yet — add files to this project&apos;s Gallery property in Notion.
+              No media yet — add files to this project&apos;s Gallery or Video URLs property in Notion.
             </p>
-          ) : (
+          </section>
+        ) : project.gallery.length > 0 ? (
+          <section className="wrap gallery">
             <div className="gallery-masonry">
               {project.gallery.map((media) => (
                 <div className="gallery-item" key={`${media.property}-${media.index}`}>
@@ -84,8 +86,8 @@ export default async function ProjectPage({
                 </div>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        ) : null}
 
         <section className="wrap next-project">
           <Link href="/work">← Back to all work</Link>
