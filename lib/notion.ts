@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Client, collectPaginatedAPI, isFullDatabase, isFullPage } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client";
 
@@ -16,7 +17,7 @@ export type LogoItem = {
   id: string;
   name: string;
   logo: MediaRef | null;
-  link: string | null;
+  href: string | null;
 };
 
 export type WorkCategory = "F&B" | "Brand Content" | "Event Coverage";
@@ -158,16 +159,25 @@ async function queryPublishedRows(databaseId: string | undefined): Promise<PageO
 }
 
 export async function getLogos(): Promise<LogoItem[]> {
-  const rows = await queryPublishedRows(process.env.NOTION_LOGOS_DB_ID);
-  return rows.map((page) => ({
-    id: page.id,
-    name: getTitle(page, "Name"),
-    logo: toMediaRef(page, "Logo"),
-    link: getUrl(page, "Link"),
-  }));
+  const [rows, projects] = await Promise.all([
+    queryPublishedRows(process.env.NOTION_LOGOS_DB_ID),
+    getWorkProjects(),
+  ]);
+  const slugByProjectId = new Map(projects.map((p) => [p.id, p.slug]));
+
+  return rows.map((page) => {
+    const [projectId] = getRelationIds(page, "Project");
+    const projectSlug = projectId ? slugByProjectId.get(projectId) : undefined;
+    return {
+      id: page.id,
+      name: getTitle(page, "Name"),
+      logo: toMediaRef(page, "Logo"),
+      href: projectSlug ? `/work/${projectSlug}` : getUrl(page, "Link"),
+    };
+  });
 }
 
-export async function getWorkProjects(): Promise<WorkProject[]> {
+export const getWorkProjects = cache(async (): Promise<WorkProject[]> => {
   const rows = await queryPublishedRows(process.env.NOTION_WORK_DB_ID);
   return rows.map((page) => {
     const name = getTitle(page, "Name");
@@ -185,7 +195,7 @@ export async function getWorkProjects(): Promise<WorkProject[]> {
       showcaseVideos: getShowcaseVideos(page, "Video URLs"),
     };
   });
-}
+});
 
 export async function getWorkProjectBySlug(slug: string): Promise<WorkProject | null> {
   const projects = await getWorkProjects();
