@@ -337,9 +337,6 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 
 /* ============ WORK / PHOTOGRAPHY / PROJECT: PAGE HEAD ============ */
 .page-head{ padding-top:80px; padding-bottom:60px; border-bottom:1px solid var(--line-soft); }
-.breadcrumb{ font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 18px; }
-.breadcrumb a{ color:var(--ink-soft); text-decoration:none; }
-.breadcrumb a:hover{ color:var(--accent); }
 .page-head h1{ font-size:clamp(40px,6vw,72px); margin:0 0 14px; letter-spacing:-0.02em; text-transform:uppercase; }
 .page-head p{ color:var(--ink-soft); font-size:16px; max-width:520px; margin:0; }
 

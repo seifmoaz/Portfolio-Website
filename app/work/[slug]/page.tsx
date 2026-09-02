@@ -37,9 +37,6 @@ export default async function ProjectPage({
           )}
           <div className="project-head-scrim"></div>
           <div className="wrap project-head-content">
-            <p className="breadcrumb">
-              <Link href="/">Home</Link> / <Link href="/work">Work</Link> / {project.name}
-            </p>
             <div className="project-head-top">
               <h1>{project.name}</h1>
               <div className="project-meta">

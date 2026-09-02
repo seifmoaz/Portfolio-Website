@@ -57,9 +57,6 @@ export default async function WorkPage() {
       <Header active="work" />
       <main>
         <section className="wrap page-head">
-          <p className="breadcrumb">
-            <Link href="/">Home</Link> / Work
-          </p>
           <h1>Selected Work</h1>
           <p>
             Fashion, F&amp;B, brand content, and event coverage: real work for real clients, shot and

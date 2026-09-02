@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
@@ -40,9 +39,6 @@ export default async function PhotographyPage() {
       <Header active="photography" />
       <main>
         <section className="wrap page-head">
-          <p className="breadcrumb">
-            <Link href="/">Home</Link> / Photography
-          </p>
           <h1>Photography</h1>
           <p>
             The stuff I shoot when nobody&apos;s paying me to, in Cairo and wherever else the trip
