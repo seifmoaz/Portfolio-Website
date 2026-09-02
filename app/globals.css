@@ -371,18 +371,24 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
   display:flex; align-items:baseline; gap:16px;
 }
 .category-title .count{ font-family:'Instrument Serif', serif; font-style:italic; font-size:16px; color:var(--ink-soft); font-weight:400; text-transform:none; letter-spacing:0; }
-.project-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
+.project-grid{
+  display:flex; gap:24px; overflow-x:auto; scroll-snap-type:x mandatory;
+  padding-bottom:12px; margin-bottom:-12px; -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin; scrollbar-color:var(--line) transparent;
+}
+.project-grid .project-card{ flex:0 0 auto; width:300px; scroll-snap-align:start; }
 .project-grid .project-card-media{ aspect-ratio:4/3; }
 
 .empty-state{ color:var(--ink-soft); font-size:15px; padding:8px 0 12px; }
 
 @media (max-width:1000px){
   .featured-grid{ grid-template-columns:repeat(2,1fr); }
-  .project-grid{ grid-template-columns:repeat(2,1fr); }
+  .project-grid .project-card{ width:240px; }
 }
 @media (max-width:600px){
   .featured-grid{ grid-template-columns:repeat(2,1fr); gap:12px; }
-  .project-grid{ grid-template-columns:repeat(2,1fr); gap:12px; }
+  .project-grid{ gap:12px; }
+  .project-grid .project-card{ width:68vw; }
   .page-head{ padding-top:56px; padding-bottom:40px; }
   .featured, .category-block{ padding-top:48px; padding-bottom:48px; }
 }
