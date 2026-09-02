@@ -430,7 +430,7 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 .gallery-item:hover{ border-color:var(--accent); }
 .gallery-item img, .gallery-item video{ width:100%; height:auto; display:block; }
 @media (max-width:1000px){ .gallery-masonry{ column-count:2; } }
-@media (max-width:640px){ .gallery-masonry{ column-count:1; } }
+@media (max-width:640px){ .gallery-masonry{ column-count:2; column-gap:12px; } .gallery-item{ margin-bottom:12px; } }
 
 .next-project{ border-top:1px solid var(--line-soft); padding-top:50px; padding-bottom:50px; text-align:center; }
 .next-project a{ color:var(--ink); text-decoration:none; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; font-weight:500; border-bottom:1px solid var(--ink); padding-bottom:3px; transition:color .2s ease, border-color .2s ease; }
