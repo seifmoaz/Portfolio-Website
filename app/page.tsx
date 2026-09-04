@@ -167,7 +167,7 @@ export default async function HomePage() {
         <Reveal as="section" className="about" id="contact">
           <div className="wrap about-grid">
             <div className="about-photo">
-              <img src="https://picsum.photos/seed/seif-portrait/800/600" alt="Portrait" />
+              <img src="/uploads/contact-photo.jpg" alt="Seif Moaz" />
             </div>
             <div>
               <p className="hero-eyebrow" style={{ marginBottom: 16 }}>Contact</p>
