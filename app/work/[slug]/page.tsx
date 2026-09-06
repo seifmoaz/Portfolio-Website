@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NotionMedia from "@/components/NotionMedia";
-import HlsVideo from "@/components/HlsVideo";
+import ShowcaseVideoGrid from "@/components/ShowcaseVideoGrid";
 import ScrollToTop from "@/components/ScrollToTop";
 import { mediaSrc } from "@/lib/notion-media";
 import { getWorkProjectBySlug, getWorkProjects } from "@/lib/notion";
@@ -58,13 +58,7 @@ export default async function ProjectPage({
 
         {project.showcaseVideos.length > 0 && (
           <section className="wrap showcase">
-            <div className="showcase-videos">
-              {project.showcaseVideos.map((video) => (
-                <div className="showcase-video" key={video.url}>
-                  <HlsVideo src={video.url} poster={video.poster ?? undefined} />
-                </div>
-              ))}
-            </div>
+            <ShowcaseVideoGrid videos={project.showcaseVideos} />
           </section>
         )}
 

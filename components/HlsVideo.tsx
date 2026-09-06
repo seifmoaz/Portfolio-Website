@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactEventHandler } from "react";
 import type Hls from "hls.js";
 
 // Client deliverable showcase videos: played with sound and controls, not
@@ -17,10 +17,12 @@ export default function HlsVideo({
   src,
   poster,
   className,
+  onLoadedMetadata,
 }: {
   src: string;
   poster?: string;
   className?: string;
+  onLoadedMetadata?: ReactEventHandler<HTMLVideoElement>;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [errored, setErrored] = useState(false);
@@ -70,5 +72,15 @@ export default function HlsVideo({
     );
   }
 
-  return <video ref={videoRef} className={className} controls playsInline poster={poster} />;
+  return (
+    <video
+      ref={videoRef}
+      className={className}
+      controls
+      playsInline
+      poster={poster}
+      preload="metadata"
+      onLoadedMetadata={onLoadedMetadata}
+    />
+  );
 }
