@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cover Photo Generator — 4×5 project covers with a centered logo</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --border: #e2e2df;
+    --text: #1b1b18;
+    --muted: #6b6b64;
+    --accent: #1f6feb;
+    --accent-fg: #ffffff;
+    --good: #1a7f37;
+    --warn: #b45309;
+    --bad: #cf222e;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --panel: #1a1a1a;
+      --border: #2e2e2b;
+      --text: #f0f0ec;
+      --muted: #9a9a92;
+      --accent: #4c9aff;
+      --accent-fg: #08131f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 1.6rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 0.95rem; max-width: 680px; line-height: 1.5; }
+
+  section.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .panel h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .logo-row { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  .logo-drop {
+    width: 160px;
+    height: 130px;
+    flex: 0 0 auto;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 10px;
+    background:
+      linear-gradient(45deg, rgba(128,128,128,0.12) 25%, transparent 25%) -8px 0/16px 16px,
+      linear-gradient(-45deg, rgba(128,128,128,0.12) 25%, transparent 25%) -8px 0/16px 16px,
+      linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.12) 75%) 0 0/16px 16px,
+      linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.12) 75%) 0 0/16px 16px,
+      var(--bg);
+    background-size: 16px 16px;
+  }
+  .logo-drop.drag { border-color: var(--accent); }
+  .logo-drop input { display: none; }
+  .logo-drop img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .logo-meta { display: flex; flex-direction: column; gap: 6px; justify-content: center; min-width: 160px; }
+  .logo-meta .name { font-size: 0.85rem; font-weight: 600; word-break: break-all; }
+  .logo-meta .dims { font-size: 0.78rem; color: var(--muted); }
+  .logo-meta button { align-self: flex-start; }
+
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+    flex: 1;
+    min-width: 260px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    justify-content: space-between;
+  }
+  .field label .val { color: var(--text); font-weight: 600; text-transform: none; letter-spacing: 0; }
+  .field select, .field input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+  .field input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .field.hidden { display: none; }
+
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--panel);
+    margin-bottom: 22px;
+  }
+  .dropzone.drag { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+  .dropzone strong { color: var(--text); }
+  .dropzone input { display: none; }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar .stats { font-size: 0.85rem; color: var(--muted); }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+  }
+  button.small { padding: 5px 10px; font-size: 0.76rem; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card .stage {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .card canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    touch-action: none;
+  }
+  .card canvas:active { cursor: grabbing; }
+  .card .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .card .name { font-size: 0.82rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .zoomrow { display: flex; align-items: center; gap: 8px; }
+  .card .zoomrow input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .card .zoomrow span { font-size: 0.72rem; color: var(--muted); min-width: 32px; text-align: right; }
+  .card .actions { display: flex; gap: 8px; }
+  .card .actions button { flex: 1; }
+  .hint { font-size: 0.7rem; color: var(--muted); }
+
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 20px 0; text-align: center; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.78rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Cover Photo Generator</h1>
+    <div class="sub">
+      Upload your logo once, drop in project photos, and each one is auto-cropped to a 4×5 frame
+      with the logo centered and sized the same way every time. Drag any photo to reposition the crop,
+      use the zoom slider to get in closer, then download.
+    </div>
+  </header>
+
+  <section class="panel">
+    <h2>Logo</h2>
+    <div class="logo-row">
+      <label class="logo-drop" id="logoDrop">
+        <input id="logoInput" type="file" accept="image/*" />
+        <span id="logoDropText">Click or drop<br />logo file</span>
+        <img id="logoPreviewImg" style="display:none;" alt="logo preview" />
+      </label>
+      <div class="logo-meta" id="logoMeta" style="display:none;">
+        <div class="name" id="logoName"></div>
+        <div class="dims" id="logoDims"></div>
+        <button class="small" id="logoRemove">Remove logo</button>
+      </div>
+
+      <div class="fields">
+        <div class="field">
+          <label>Logo width <span class="val" id="logoWidthVal">42%</span></label>
+          <input id="logoWidth" type="range" min="10" max="70" value="42" step="1" />
+        </div>
+        <div class="field">
+          <label>Logo max height <span class="val" id="logoHeightVal">14%</span></label>
+          <input id="logoMaxHeight" type="range" min="5" max="40" value="14" step="1" />
+        </div>
+        <div class="field">
+          <label>Vertical position</label>
+          <select id="logoPosition">
+            <option value="center" selected>Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </div>
+        <div class="field hidden" id="logoPaddingField">
+          <label>Edge padding <span class="val" id="logoPaddingVal">8%</span></label>
+          <input id="logoPadding" type="range" min="2" max="20" value="8" step="1" />
+        </div>
+        <div class="field">
+          <label>Logo color</label>
+          <select id="logoColor">
+            <option value="original" selected>Original</option>
+            <option value="white">Force white</option>
+            <option value="black">Force black</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Legibility</label>
+          <select id="logoContrast">
+            <option value="shadow" selected>Drop shadow</option>
+            <option value="backdrop">Soft backdrop plate</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Output</h2>
+    <div class="fields">
+      <div class="field">
+        <label>Frame size (4:5)</label>
+        <select id="outputSize">
+          <option value="1080x1350" selected>Standard — 1080×1350</option>
+          <option value="1600x2000">High — 1600×2000</option>
+          <option value="2160x2700">Ultra — 2160×2700</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>File format</label>
+        <select id="format">
+          <option value="image/jpeg" selected>JPEG</option>
+          <option value="image/png">PNG</option>
+        </select>
+      </div>
+      <div class="field" id="qualityField">
+        <label>JPEG quality <span class="val" id="qualityVal">92%</span></label>
+        <input id="quality" type="range" min="60" max="100" value="92" step="1" />
+      </div>
+    </div>
+  </section>
+
+  <label class="dropzone" id="dropzone">
+    <input id="fileInput" type="file" accept="image/*" multiple />
+    <div><strong>Click to choose project photos</strong> or drag &amp; drop them here</div>
+  </label>
+
+  <div class="toolbar">
+    <div class="stats" id="stats"></div>
+    <div style="display:flex; gap:8px;">
+      <button id="downloadAll" disabled>Download all</button>
+      <button id="clearAll" disabled>Clear</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyState">No photos yet.</div>
+
+  <footer>Processing happens locally on your device. Closing this tab discards everything.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  // ---- logo state ----
+  const logoDrop = $('logoDrop');
+  const logoInput = $('logoInput');
+  const logoPreviewImg = $('logoPreviewImg');
+  const logoDropText = $('logoDropText');
+  const logoMeta = $('logoMeta');
+  const logoName = $('logoName');
+  const logoDims = $('logoDims');
+  const logoRemove = $('logoRemove');
+
+  let logoImg = null;       // Image
+  let logoFileName = '';
+  const coloredLogoCache = {}; // mode -> canvas
+
+  function invalidateLogoCache() {
+    for (const k in coloredLogoCache) delete coloredLogoCache[k];
+  }
+
+  function getColoredLogo(mode) {
+    if (!logoImg) return null;
+    if (mode === 'original') return logoImg;
+    if (coloredLogoCache[mode]) return coloredLogoCache[mode];
+    const c = document.createElement('canvas');
+    c.width = logoImg.naturalWidth || logoImg.width;
+    c.height = logoImg.naturalHeight || logoImg.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(logoImg, 0, 0, c.width, c.height);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = mode === 'white' ? '#ffffff' : '#000000';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.globalCompositeOperation = 'source-over';
+    coloredLogoCache[mode] = c;
+    return c;
+  }
+
+  function loadLogoFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      logoImg = img;
+      logoFileName = file.name;
+      invalidateLogoCache();
+      logoPreviewImg.src = url;
+      logoPreviewImg.style.display = 'block';
+      logoDropText.style.display = 'none';
+      logoName.textContent = file.name;
+      logoDims.textContent = `${img.naturalWidth}×${img.naturalHeight}`;
+      logoMeta.style.display = 'flex';
+      renderAll();
+    };
+    img.onerror = () => alert('Could not load that image as a logo.');
+    img.src = url;
+  }
+
+  logoInput.addEventListener('change', (e) => loadLogoFile(e.target.files[0]));
+  ['dragenter', 'dragover'].forEach((evt) =>
+    logoDrop.addEventListener(evt, (e) => { e.preventDefault(); logoDrop.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach((evt) =>
+    logoDrop.addEventListener(evt, (e) => { e.preventDefault(); logoDrop.classList.remove('drag'); })
+  );
+  logoDrop.addEventListener('drop', (e) => {
+    if (e.dataTransfer?.files?.length) loadLogoFile(e.dataTransfer.files[0]);
+  });
+  logoRemove.addEventListener('click', (e) => {
+    e.preventDefault();
+    logoImg = null;
+    logoFileName = '';
+    invalidateLogoCache();
+    logoPreviewImg.style.display = 'none';
+    logoPreviewImg.src = '';
+    logoDropText.style.display = 'block';
+    logoMeta.style.display = 'none';
+    logoInput.value = '';
+    renderAll();
+  });
+
+  // ---- global setting controls ----
+  const logoWidthInput = $('logoWidth');
+  const logoHeightInput = $('logoMaxHeight');
+  const logoWidthVal = $('logoWidthVal');
+  const logoHeightVal = $('logoHeightVal');
+  const logoPositionSelect = $('logoPosition');
+  const logoPaddingField = $('logoPaddingField');
+  const logoPaddingInput = $('logoPadding');
+  const logoPaddingVal = $('logoPaddingVal');
+  const logoColorSelect = $('logoColor');
+  const logoContrastSelect = $('logoContrast');
+  const outputSizeSelect = $('outputSize');
+  const formatSelect = $('format');
+  const qualityField = $('qualityField');
+  const qualityInput = $('quality');
+  const qualityVal = $('qualityVal');
+
+  function settings() {
+    const [w, h] = outputSizeSelect.value.split('x').map(Number);
+    return {
+      outW: w,
+      outH: h,
+      format: formatSelect.value,
+      quality: Number(qualityInput.value) / 100,
+      logoWidthPct: Number(logoWidthInput.value),
+      logoMaxHeightPct: Number(logoHeightInput.value),
+      position: logoPositionSelect.value,
+      paddingPct: Number(logoPaddingInput.value),
+      colorMode: logoColorSelect.value,
+      contrast: logoContrastSelect.value,
+    };
+  }
+
+  function syncControlLabels() {
+    logoWidthVal.textContent = logoWidthInput.value + '%';
+    logoHeightVal.textContent = logoHeightInput.value + '%';
+    logoPaddingVal.textContent = logoPaddingInput.value + '%';
+    qualityVal.textContent = qualityInput.value + '%';
+    logoPaddingField.classList.toggle('hidden', logoPositionSelect.value === 'center');
+    qualityField.style.display = formatSelect.value === 'image/jpeg' ? '' : 'none';
+  }
+
+  [logoWidthInput, logoHeightInput, logoPositionSelect, logoPaddingInput, logoColorSelect, logoContrastSelect, outputSizeSelect, formatSelect, qualityInput].forEach((el) => {
+    el.addEventListener('input', () => { syncControlLabels(); renderAll(); });
+  });
+  syncControlLabels();
+
+  // ---- drawing ----
+  function drawFrame(ctx, cw, ch, item, s) {
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // background photo, cover-fit + pan/zoom
+    const img = item.img;
+    const coverScale = Math.max(cw / img.width, ch / img.height) * item.zoom;
+    const scaledW = img.width * coverScale;
+    const scaledH = img.height * coverScale;
+    const excessX = Math.max(0, scaledW - cw);
+    const excessY = Math.max(0, scaledH - ch);
+    const drawX = -excessX * item.posX;
+    const drawY = -excessY * item.posY;
+    ctx.drawImage(img, drawX, drawY, scaledW, scaledH);
+    item._excessX = excessX;
+    item._excessY = excessY;
+    item._scaledW = scaledW;
+    item._scaledH = scaledH;
+
+    // logo
+    if (!logoImg) return;
+    const source = getColoredLogo(s.colorMode);
+    const lw = source.naturalWidth || source.width;
+    const lh = source.naturalHeight || source.height;
+    const maxW = cw * (s.logoWidthPct / 100);
+    const maxH = ch * (s.logoMaxHeightPct / 100);
+    const scale = Math.min(maxW / lw, maxH / lh);
+    const dW = lw * scale;
+    const dH = lh * scale;
+    const x = (cw - dW) / 2;
+    let y;
+    if (s.position === 'top') y = ch * (s.paddingPct / 100);
+    else if (s.position === 'bottom') y = ch - ch * (s.paddingPct / 100) - dH;
+    else y = (ch - dH) / 2;
+
+    if (s.contrast === 'backdrop') {
+      const padX = dW * 0.18;
+      const padY = dH * 0.35;
+      const rx = x - padX, ry = y - padY, rw = dW + padX * 2, rh = dH + padY * 2;
+      const r = Math.min(rh, rw) * 0.18;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.beginPath();
+      ctx.moveTo(rx + r, ry);
+      ctx.arcTo(rx + rw, ry, rx + rw, ry + rh, r);
+      ctx.arcTo(rx + rw, ry + rh, rx, ry + rh, r);
+      ctx.arcTo(rx, ry + rh, rx, ry, r);
+      ctx.arcTo(rx, ry, rx + rw, ry, r);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    if (s.contrast === 'shadow') {
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = ch * 0.02;
+      ctx.shadowOffsetY = ch * 0.004;
+    }
+    ctx.drawImage(source, x, y, dW, dH);
+    ctx.restore();
+  }
+
+  function renderPreview(item) {
+    const s = settings();
+    const canvas = item.canvas;
+    drawFrame(canvas.getContext('2d'), canvas.width, canvas.height, item, s);
+  }
+
+  function renderAll() {
+    items.forEach(renderPreview);
+  }
+
+  function baseName(name) {
+    const i = name.lastIndexOf('.');
+    return i > 0 ? name.slice(0, i) : name;
+  }
+
+  function extFor(mime) {
+    return mime === 'image/png' ? 'png' : 'jpg';
+  }
+
+  function exportBlob(item) {
+    const s = settings();
+    const canvas = document.createElement('canvas');
+    canvas.width = s.outW;
+    canvas.height = s.outH;
+    // export uses the same normalized pos/zoom, recomputed at full resolution
+    const exportItem = { img: item.img, posX: item.posX, posY: item.posY, zoom: item.zoom };
+    drawFrame(canvas.getContext('2d'), s.outW, s.outH, exportItem, s);
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b), s.format, s.quality));
+  }
+
+  // ---- photo items ----
+  const dropzone = $('dropzone');
+  const fileInput = $('fileInput');
+  const grid = $('grid');
+  const emptyState = $('emptyState');
+  const statsEl = $('stats');
+  const downloadAllBtn = $('downloadAll');
+  const clearAllBtn = $('clearAll');
+
+  const PREVIEW_W = 480, PREVIEW_H = 600;
+  let items = [];
+
+  function makeCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="stage"><canvas width="${PREVIEW_W}" height="${PREVIEW_H}"></canvas></div>
+      <div class="body">
+        <div class="name" title="${item.file.name}">${item.file.name}</div>
+        <div class="hint">Drag photo to reposition &middot; scroll to zoom</div>
+        <div class="zoomrow">
+          <input type="range" min="1" max="3" step="0.01" value="1" class="zoom" />
+          <span class="zoomlabel">1.0×</span>
+        </div>
+        <div class="actions">
+          <button class="small reset">Reset</button>
+          <button class="primary dl" style="flex:2;">Download</button>
+        </div>
+      </div>
+    `;
+    const canvas = card.querySelector('canvas');
+    item.canvas = canvas;
+
+    const zoomInput = card.querySelector('.zoom');
+    const zoomLabel = card.querySelector('.zoomlabel');
+    zoomInput.addEventListener('input', () => {
+      item.zoom = Number(zoomInput.value);
+      zoomLabel.textContent = item.zoom.toFixed(2) + '×';
+      renderPreview(item);
+    });
+
+    card.querySelector('.reset').addEventListener('click', () => {
+      item.posX = 0.5; item.posY = 0.5; item.zoom = 1;
+      zoomInput.value = 1; zoomLabel.textContent = '1.0×';
+      renderPreview(item);
+    });
+
+    card.querySelector('.dl').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      const s = settings();
+      const blob = await exportBlob(item);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${baseName(item.file.name)}-cover.${extFor(s.format)}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      btn.disabled = false;
+    });
+
+    // drag to pan
+    let dragging = false, startX = 0, startY = 0, startPosX = 0.5, startPosY = 0.5;
+    canvas.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      startPosX = item.posX; startPosY = item.posY;
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const dx = (e.clientX - startX) * scaleX;
+      const dy = (e.clientY - startY) * scaleY;
+      const excessX = Math.max(1, item._excessX || 1);
+      const excessY = Math.max(1, item._excessY || 1);
+      item.posX = Math.min(1, Math.max(0, startPosX - dx / excessX));
+      item.posY = Math.min(1, Math.max(0, startPosY - dy / excessY));
+      renderPreview(item);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) =>
+      canvas.addEventListener(evt, () => { dragging = false; })
+    );
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      item.zoom = Math.min(3, Math.max(1, item.zoom + delta));
+      zoomInput.value = item.zoom;
+      zoomLabel.textContent = item.zoom.toFixed(2) + '×';
+      renderPreview(item);
+    }, { passive: false });
+
+    return card;
+  }
+
+  function updateStats() {
+    if (!items.length) { statsEl.textContent = ''; return; }
+    statsEl.textContent = `${items.length} photo${items.length === 1 ? '' : 's'} ready`;
+    downloadAllBtn.disabled = items.length === 0;
+  }
+
+  function addFiles(fileList) {
+    const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    emptyState.style.display = 'none';
+    clearAllBtn.disabled = false;
+
+    for (const file of files) {
+      const id = Math.random().toString(36).slice(2);
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      const item = { id, file, url, img: null, posX: 0.5, posY: 0.5, zoom: 1, canvas: null };
+      img.onload = () => {
+        item.img = img;
+        const card = makeCard(item);
+        grid.appendChild(card);
+        items.push(item);
+        renderPreview(item);
+        updateStats();
+      };
+      img.onerror = () => console.error('Failed to load', file.name);
+      img.src = url;
+    }
+  }
+
+  fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+  ['dragenter', 'dragover'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag'); })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    items.forEach((i) => URL.revokeObjectURL(i.url));
+    items = [];
+    grid.innerHTML = '';
+    emptyState.style.display = 'block';
+    statsEl.textContent = '';
+    downloadAllBtn.disabled = true;
+    clearAllBtn.disabled = true;
+    fileInput.value = '';
+  });
+
+  downloadAllBtn.addEventListener('click', async () => {
+    const s = settings();
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const blob = await exportBlob(item);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${baseName(item.file.name)}-cover.${extFor(s.format)}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  });
+})();
+</script>
+</body>
+</html>
