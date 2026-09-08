@@ -28,6 +28,7 @@ export type WorkCategory = "F&B" | "Brand Content" | "Event Coverage";
 export type ShowcaseVideo = {
   url: string;
   poster: string | null;
+  ratio: number | null;
 };
 
 export type WorkProject = {
@@ -125,12 +126,40 @@ function deriveBunnyThumbnail(url: string): string | null {
   }
 }
 
-function getShowcaseVideos(page: PageObjectResponse, prop: string): ShowcaseVideo[] {
-  return getRichText(page, prop)
+// Mobile Safari defers loading a <video>'s network data (and so its
+// `loadedmetadata` event) until the user interacts with it, so a layout
+// that only learns a video's aspect ratio from the client would sit stuck
+// at a fallback shape indefinitely on phones — the exact "everything is
+// 16:9 with black bars" bug this fixes. Reading the resolution out of the
+// HLS master playlist at request time instead means the real aspect ratio
+// is already known on first paint, no client-side load required.
+async function fetchHlsRatio(url: string): Promise<number | null> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const match = text.match(/RESOLUTION=(\d+)x(\d+)/);
+    if (!match) return null;
+    const w = Number(match[1]);
+    const h = Number(match[2]);
+    return w && h ? w / h : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getShowcaseVideos(page: PageObjectResponse, prop: string): Promise<ShowcaseVideo[]> {
+  const urls = getRichText(page, prop)
     .split("\n")
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((url) => ({ url, poster: deriveBunnyThumbnail(url) }));
+    .filter(Boolean);
+  return Promise.all(
+    urls.map(async (url) => ({
+      url,
+      poster: deriveBunnyThumbnail(url),
+      ratio: await fetchHlsRatio(url),
+    })),
+  );
 }
 
 function slugify(input: string): string {
@@ -179,22 +208,24 @@ export async function getLogos(): Promise<LogoItem[]> {
 
 export const getWorkProjects = cache(async (): Promise<WorkProject[]> => {
   const rows = await queryPublishedRows(process.env.NOTION_WORK_DB_ID);
-  return rows.map((page) => {
-    const name = getTitle(page, "Name");
-    const slugField = getRichText(page, "Slug");
-    return {
-      id: page.id,
-      name,
-      slug: slugField || slugify(name),
-      category: getSelectName(page, "Category"),
-      featured: getCheckbox(page, "Featured"),
-      summary: getRichText(page, "Summary"),
-      client: getRichText(page, "Client"),
-      cover: toMediaRef(page, "Cover"),
-      gallery: toMediaRefs(page, "Gallery"),
-      showcaseVideos: getShowcaseVideos(page, "Video URLs"),
-    };
-  });
+  return Promise.all(
+    rows.map(async (page) => {
+      const name = getTitle(page, "Name");
+      const slugField = getRichText(page, "Slug");
+      return {
+        id: page.id,
+        name,
+        slug: slugField || slugify(name),
+        category: getSelectName(page, "Category"),
+        featured: getCheckbox(page, "Featured"),
+        summary: getRichText(page, "Summary"),
+        client: getRichText(page, "Client"),
+        cover: toMediaRef(page, "Cover"),
+        gallery: toMediaRefs(page, "Gallery"),
+        showcaseVideos: await getShowcaseVideos(page, "Video URLs"),
+      };
+    }),
+  );
 });
 
 export async function getWorkProjectBySlug(slug: string): Promise<WorkProject | null> {

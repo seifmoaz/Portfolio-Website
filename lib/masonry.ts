@@ -15,16 +15,20 @@ export function spanForRatio(ratio: number, numColumns: number): number {
 // The one way a skyline packer like this *can* still strand a gap: a
 // multi-column item anchors to the tallest column it spans, leaving dead
 // space under any shorter column it also covers. So a span is only used
-// when the columns it would cover are already within GAP_TOLERANCE of each
+// when the columns it would cover are already within gapTolerance of each
 // other — otherwise it falls back to a narrower span (always down to 1,
-// which spans a single column and can never create waste).
-const GAP_TOLERANCE = 24; // px — roughly one gap's worth of "close enough"
+// which spans a single column and can never create waste). Callers with
+// few, large columns (e.g. a 2-column video grid where a landscape item
+// must always read as a full-width row, never a squeezed single column)
+// can pass Infinity to always honor the ideal span.
+const DEFAULT_GAP_TOLERANCE = 24; // px — roughly one gap's worth of "close enough"
 
 export function layoutMasonry(
   items: { key: string; ratio: number }[],
   numColumns: number,
   containerWidth: number,
   gap: number,
+  gapTolerance: number = DEFAULT_GAP_TOLERANCE,
 ): { placements: Placement[]; height: number } {
   const colWidth = (containerWidth - (numColumns - 1) * gap) / numColumns;
   const colBottoms = new Array(numColumns).fill(0);
@@ -41,7 +45,7 @@ export function layoutMasonry(
         const slice = colBottoms.slice(start, start + span);
         const top = Math.max(...slice);
         const wasted = slice.reduce((sum, c) => sum + (top - c), 0);
-        if (wasted <= GAP_TOLERANCE && top < bestTop) {
+        if (wasted <= gapTolerance && top < bestTop) {
           bestTop = top;
           bestStart = start;
         }

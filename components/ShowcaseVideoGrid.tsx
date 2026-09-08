@@ -7,16 +7,20 @@ import type { ShowcaseVideo } from "@/lib/notion";
 
 const DEFAULT_RATIO = 16 / 9; // guess used before a video's real aspect ratio is known
 
-// Showcase videos read their intrinsic size from `loadedmetadata` rather
-// than the CSS auto-sizing that .pin-item's <img>/<video> can rely on: a
-// hls.js-driven <video> reports videoWidth/videoHeight immediately once
-// metadata parses, well before the browser has decoded and painted a frame,
-// and some browsers don't apply that size to layout (via width:auto/
-// height:auto) until a frame actually renders. Placing every item with an
-// explicit pixel width/height — as this masonry layout does — sidesteps
-// that lag entirely.
+// Aspect ratio primarily comes from `video.ratio` (read server-side from the
+// HLS master playlist — see getShowcaseVideos in lib/notion.ts), not from
+// the client `loadedmetadata` event: mobile Safari defers loading a
+// <video>'s network data until the user interacts with it, so a layout that
+// depended on the client alone would sit stuck at a fallback shape
+// indefinitely on phones. `loadedmetadata` still self-corrects the rare
+// case the server-side lookup failed. Placing every item with an explicit
+// pixel width/height (rather than relying on CSS auto-sizing) means the
+// masonry never depends on a frame having decoded either.
+//
+// Two columns even on a phone-width screen so a landscape video (which
+// spans both, per spanForRatio) reads as one full-width row while portrait
+// videos sit two across, rather than every video stacking one per row.
 function columnsForWidth(width: number): number {
-  if (width <= 700) return 1;
   if (width <= 1100) return 2;
   return 3;
 }
@@ -44,12 +48,15 @@ export default function ShowcaseVideoGrid({ videos }: { videos: ShowcaseVideo[] 
   };
 
   const numColumns = containerWidth > 0 ? columnsForWidth(containerWidth) : 3;
-  const gap = numColumns <= 1 ? 24 : 32;
+  const gap = containerWidth > 0 && containerWidth <= 700 ? 16 : 32;
 
   const { placements, height } = useMemo(() => {
     if (!containerWidth) return { placements: [] as Placement[], height: 0 };
-    const withRatios = videos.map((v) => ({ key: v.url, ratio: ratios[v.url] ?? DEFAULT_RATIO }));
-    return layoutMasonry(withRatios, numColumns, containerWidth, gap);
+    const withRatios = videos.map((v) => ({ key: v.url, ratio: ratios[v.url] ?? v.ratio ?? DEFAULT_RATIO }));
+    // With only 2-3 columns (vs. the photo grid's 6), a landscape video
+    // squeezed into one column reads as a mistake, not a packing nicety —
+    // always give it the full row its ratio calls for.
+    return layoutMasonry(withRatios, numColumns, containerWidth, gap, Infinity);
   }, [videos, ratios, numColumns, containerWidth, gap]);
 
   const placementByKey = useMemo(() => {
