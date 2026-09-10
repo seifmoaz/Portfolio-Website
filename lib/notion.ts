@@ -162,7 +162,7 @@ async function getShowcaseVideos(page: PageObjectResponse, prop: string): Promis
   );
 }
 
-function slugify(input: string): string {
+export function slugify(input: string): string {
   return input
     .toLowerCase()
     .trim()
