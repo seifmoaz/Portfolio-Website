@@ -125,7 +125,7 @@ export default async function HomePage() {
 
         <Reveal as="section" className="wrap shots">
           <div className="section-head">
-            <h2>The Side Quests</h2>
+            <h2>The &ldquo;Side Quests&rdquo;</h2>
           </div>
           <div className="shots-masonry">
             {moments.length === 0
