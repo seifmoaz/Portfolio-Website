@@ -144,7 +144,7 @@ export default async function HomePage() {
                   const content = (
                     <>
                       <div className="shot-media">
-                        <MomentVideo src={moment.videoUrl} />
+                        <MomentVideo src={moment.videoUrl} poster={moment.poster ?? undefined} />
                       </div>
                       {moment.caption && <p className="shot-caption">{moment.caption}</p>}
                     </>

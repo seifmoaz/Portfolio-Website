@@ -112,14 +112,22 @@ function toMediaRef(page: PageObjectResponse, prop: string): MediaRef | null {
   return toMediaRefs(page, prop)[0] ?? null;
 }
 
-// Bunny Stream serves a thumbnail at the same path as the HLS playlist,
-// just with the filename swapped — derive it so a poster shows immediately
-// instead of a blank player before the visitor presses play.
+// Bunny Stream serves a thumbnail in the same per-video directory as every
+// other file for it (the HLS playlist, an MP4 rendition, ...) — derive it
+// by swapping whatever filename is there for thumbnail.jpg. A poster
+// matters beyond "looks nicer while loading": without one, a <video> has no
+// intrinsic size until its metadata loads, and mobile Safari defers that
+// network request until the visitor interacts with the video — so a
+// height:auto box sits collapsed to the browser's blank fallback size
+// indefinitely. The poster image loads like any normal <img>, giving the
+// box a real size immediately.
 function deriveBunnyThumbnail(url: string): string | null {
   try {
     const parsed = new URL(url);
-    if (!parsed.pathname.endsWith("/playlist.m3u8")) return null;
-    parsed.pathname = parsed.pathname.replace(/playlist\.m3u8$/, "thumbnail.jpg");
+    const segments = parsed.pathname.split("/");
+    if (segments.length < 2 || !segments[segments.length - 1]) return null;
+    segments[segments.length - 1] = "thumbnail.jpg";
+    parsed.pathname = segments.join("/");
     return parsed.toString();
   } catch {
     return null;
@@ -236,6 +244,7 @@ export async function getWorkProjectBySlug(slug: string): Promise<WorkProject | 
 export type Moment = {
   id: string;
   videoUrl: string;
+  poster: string | null;
   caption: string;
   projectSlug: string | null;
 };
@@ -259,6 +268,7 @@ export async function getMoments(limit = 6): Promise<Moment[]> {
       return {
         id: page.id,
         videoUrl,
+        poster: deriveBunnyThumbnail(videoUrl),
         caption: getTitle(page, "Caption"),
         projectSlug: projectId ? (slugByProjectId.get(projectId) ?? null) : null,
       };
