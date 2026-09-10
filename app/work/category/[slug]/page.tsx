@@ -32,9 +32,6 @@ export default async function CategoryPage({
       <main>
         <section className="wrap page-head">
           <h1>{category}</h1>
-          <p>
-            {items.length} project{items.length === 1 ? "" : "s"} in {category}.
-          </p>
         </section>
 
         <section className="wrap category-block">
