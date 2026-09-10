@@ -118,6 +118,9 @@ export default async function HomePage() {
               ))
             )}
           </div>
+          <div className="view-all-wrap">
+            <Link className="view-all" href="/work">View all projects →</Link>
+          </div>
         </Reveal>
 
         <Reveal as="section" className="wrap shots">
