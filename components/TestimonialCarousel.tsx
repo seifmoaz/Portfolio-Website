@@ -1,16 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { Testimonial } from "@/lib/notion";
 
-type Testimonial = { who: string; quote: string };
-
-const TESTIMONIALS: Testimonial[] = [
-  { who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
-  { who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
-  { who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
+const PLACEHOLDER_TESTIMONIALS: Testimonial[] = [
+  { id: "t1", who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
+  { id: "t2", who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
+  { id: "t3", who: "Brand Name", quote: "Real testimonial goes here once it lands. Promise it will be a good one." },
 ];
 
-export default function TestimonialCarousel() {
+export default function TestimonialCarousel({ testimonials }: { testimonials: Testimonial[] }) {
+  const TESTIMONIALS = testimonials.length > 0 ? testimonials : PLACEHOLDER_TESTIMONIALS;
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const touchStartX = useRef(0);

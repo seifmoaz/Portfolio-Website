@@ -267,6 +267,23 @@ export async function getMoments(limit = 6): Promise<Moment[]> {
     .slice(0, limit);
 }
 
+export type Testimonial = {
+  id: string;
+  who: string;
+  quote: string;
+};
+
+export async function getTestimonials(): Promise<Testimonial[]> {
+  const rows = await queryPublishedRows(process.env.NOTION_TESTIMONIALS_DB_ID);
+  return rows
+    .map((page) => ({
+      id: page.id,
+      who: getTitle(page, "Name"),
+      quote: getRichText(page, "Quote"),
+    }))
+    .filter((t) => t.quote);
+}
+
 export async function getPhotographyItems(): Promise<PhotographyItem[]> {
   const rows = await queryPublishedRows(process.env.NOTION_PHOTOGRAPHY_DB_ID);
   return rows.map((page) => ({

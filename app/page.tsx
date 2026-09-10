@@ -8,7 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import PinterestGrid, { type PinItem } from "@/components/PinterestGrid";
 import MomentVideo from "@/components/MomentVideo";
 import { mediaSrc } from "@/lib/notion-media";
-import { getLogos, getPhotographyItems, getMoments } from "@/lib/notion";
+import { getLogos, getPhotographyItems, getMoments, getTestimonials } from "@/lib/notion";
 
 export const revalidate = 60;
 
@@ -45,7 +45,12 @@ function pickRandom<T>(items: T[], count: number): T[] {
 }
 
 export default async function HomePage() {
-  const [logos, photos, moments] = await Promise.all([getLogos(), getPhotographyItems(), getMoments()]);
+  const [logos, photos, moments, testimonials] = await Promise.all([
+    getLogos(),
+    getPhotographyItems(),
+    getMoments(),
+    getTestimonials(),
+  ]);
   const reelItems: PinItem[] =
     photos.length === 0
       ? PLACEHOLDER_REEL
@@ -225,7 +230,7 @@ export default async function HomePage() {
         </Reveal>
 
         <Reveal as="section" className="testimonials" id="testimonials">
-          <TestimonialCarousel />
+          <TestimonialCarousel testimonials={testimonials} />
         </Reveal>
       </main>
 
