@@ -189,8 +189,12 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
 /* ============ HOME: BEST SHOTS (masonry) ============ */
 .shots{ border-top:1px solid var(--line-soft); padding-top:110px; padding-bottom:110px; }
 .shots .section-head{ margin-bottom:52px; }
-.shots-masonry{ column-count:3; column-gap:28px; }
-.shot-item{ break-inside:avoid; margin-bottom:36px; display:inline-block; width:100%; color:inherit; text-decoration:none; }
+/* A plain grid, not CSS column-count: Safari's multi-column layout engine
+   is unreliable with async-loading content like video posters — it can
+   intermittently mis-paint a phantom, non-interactive box during scroll
+   as it rebalances columns. A grid has no such rebalancing to get wrong. */
+.shots-masonry{ display:grid; grid-template-columns:repeat(3, 1fr); gap:28px; }
+.shot-item{ display:block; color:inherit; text-decoration:none; }
 .shot-media{
   position:relative; overflow:hidden; border-radius:8px; border:1px solid var(--line); background:var(--canvas);
   transition:border-color .25s ease;
@@ -199,8 +203,8 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
 .shot-media video, .shot-media img{ width:100%; height:auto; display:block; }
 .shot-caption{ margin-top:12px; font-size:13.5px; color:var(--ink-soft); line-height:1.5; padding:0 2px; }
 .shot-caption b{ color:var(--ink); font-weight:600; }
-@media (max-width:1000px){ .shots-masonry{ column-count:2; } }
-@media (max-width:480px){ .shots-masonry{ column-gap:14px; } }
+@media (max-width:1000px){ .shots-masonry{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:480px){ .shots-masonry{ gap:14px; } }
 
 /* ============ HOME: PROJECT REEL ============ */
 .reel{ border-top:1px solid var(--line-soft); padding-top:100px; padding-bottom:90px; }
