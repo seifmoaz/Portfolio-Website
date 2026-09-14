@@ -385,7 +385,6 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
 }
 .category-title .count{ font-family:'Instrument Serif', serif; font-style:italic; font-size:16px; color:var(--ink-soft); font-weight:400; text-transform:none; letter-spacing:0; }
 .category-full-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; }
-.category-full-grid .project-card-media{ aspect-ratio:4/3; }
 @media (max-width:1000px){ .category-full-grid{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:600px){ .category-full-grid{ grid-template-columns:repeat(2,1fr); gap:12px; } }
 .project-grid{
@@ -394,7 +393,6 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
   scrollbar-width:thin; scrollbar-color:var(--line) transparent;
 }
 .project-grid .project-card{ flex:0 0 auto; width:300px; scroll-snap-align:start; }
-.project-grid .project-card-media{ aspect-ratio:4/3; }
 
 .empty-state{ color:var(--ink-soft); font-size:15px; padding:8px 0 12px; }
 
