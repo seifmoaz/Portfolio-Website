@@ -43,7 +43,7 @@ export default function TestimonialCarousel({ testimonials }: { testimonials: Te
         poster="https://vz-34d2648d-c2d.b-cdn.net/3de0461f-9632-4e3e-bc8e-1d1fa7fc4f98/thumbnail.jpg"
       >
         <source
-          src="https://vz-34d2648d-c2d.b-cdn.net/3de0461f-9632-4e3e-bc8e-1d1fa7fc4f98/play_720p.mp4"
+          src="https://vz-34d2648d-c2d.b-cdn.net/3de0461f-9632-4e3e-bc8e-1d1fa7fc4f98/play_480p.mp4"
           type="video/mp4"
         />
       </video>
