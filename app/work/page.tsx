@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
+import ScrollRow from "@/components/ScrollRow";
 import ScrollToTop from "@/components/ScrollToTop";
 import { getWorkProjects, slugify } from "@/lib/notion";
 
@@ -45,11 +46,11 @@ export default async function WorkPage() {
         {featured.length > 0 && (
           <section className="wrap featured">
             <p className="section-label">Featured Work</p>
-            <div className="featured-grid">
+            <ScrollRow className="featured-grid">
               {featured.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
-            </div>
+            </ScrollRow>
           </section>
         )}
 
@@ -71,11 +72,11 @@ export default async function WorkPage() {
                   View All →
                 </Link>
               </div>
-              <div className="project-grid">
+              <ScrollRow className="project-grid">
                 {group.items.map((project) => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
-              </div>
+              </ScrollRow>
             </section>
           ))
         )}
