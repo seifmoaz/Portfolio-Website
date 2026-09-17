@@ -34,6 +34,7 @@ export default function ScrollRow({ className, children }: { className: string; 
   useEffect(
     () => () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (scrollerRef.current) scrollerRef.current.style.scrollSnapType = "";
     },
     [],
   );
@@ -67,13 +68,25 @@ export default function ScrollRow({ className, children }: { className: string; 
     const duration = 650;
     const startTime = performance.now();
 
+    // CSS scroll-snap fights a hand-driven scrollLeft animation: the
+    // browser can correct each intermediate frame straight to the nearest
+    // snap point, which reads as an instant jump instead of a glide.
+    // Suspend snapping only for the animation's duration, then restore it
+    // so real wheel/touch scrolling still snaps as before.
+    el.style.scrollSnapType = "none";
+
     const step = (now: number) => {
       const t = Math.min((now - startTime) / duration, 1);
       // Ease-in-out cubic — gentler acceleration and deceleration than a
       // pure ease-out, reads as a smoother, more deliberate glide.
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       el.scrollLeft = start + change * eased;
-      animRef.current = t < 1 ? requestAnimationFrame(step) : null;
+      if (t < 1) {
+        animRef.current = requestAnimationFrame(step);
+      } else {
+        animRef.current = null;
+        el.style.scrollSnapType = "";
+      }
     };
     animRef.current = requestAnimationFrame(step);
   };
