@@ -74,10 +74,10 @@ export default async function HomePage() {
             muted
             loop
             playsInline
-            poster="https://vz-34d2648d-c2d.b-cdn.net/0814af06-51e4-4dbc-ba13-29eaa1b7cff2/thumbnail.jpg"
+            poster="https://vz-34d2648d-c2d.b-cdn.net/3de0461f-9632-4e3e-bc8e-1d1fa7fc4f98/thumbnail.jpg"
           >
             <source
-              src="https://vz-34d2648d-c2d.b-cdn.net/0814af06-51e4-4dbc-ba13-29eaa1b7cff2/play_480p.mp4"
+              src="https://vz-34d2648d-c2d.b-cdn.net/3de0461f-9632-4e3e-bc8e-1d1fa7fc4f98/play_480p.mp4"
               type="video/mp4"
             />
           </video>
