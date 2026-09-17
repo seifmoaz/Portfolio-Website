@@ -318,8 +318,27 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
 .btn-secondary{ padding:15px 32px; border:1px solid var(--line); color:var(--ink); border-radius:4px; text-decoration:none; font-size:13.5px; letter-spacing:0.05em; text-transform:uppercase; font-weight:500; }
 
 /* ============ FOOTER (shared) ============ */
-footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:center; }
-.footer-eyebrow{ font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 14px; }
+/* `footer.wrap`, not a bare `footer` selector — <footer> also carries the
+   .wrap class, and a class selector always beats a type selector, so
+   .wrap's own `padding:0 40px` was overriding this rule's top/bottom
+   padding entirely regardless of longhand/shorthand syntax, collapsing
+   the section's real spacing to 0. */
+footer.wrap{ border-top:1px solid var(--line-soft); padding-top:90px; padding-bottom:40px; text-align:center; }
+.footer-eyebrow{
+  display:inline-flex; align-items:center; gap:9px;
+  font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent); font-weight:600;
+  margin:0 0 24px; padding:9px 20px 9px 16px; border-radius:999px;
+  border:1px solid rgba(180,197,122,0.3); background:rgba(180,197,122,0.07);
+}
+.footer-eyebrow::before{
+  content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;
+  animation:footer-dot-pulse 2.2s ease-out infinite;
+}
+@keyframes footer-dot-pulse{
+  0%{ box-shadow:0 0 0 0 rgba(180,197,122,0.55); }
+  70%{ box-shadow:0 0 0 9px rgba(180,197,122,0); }
+  100%{ box-shadow:0 0 0 0 rgba(180,197,122,0); }
+}
 .footer-email{
   font-family:'Poppins', sans-serif; font-weight:700; font-size:clamp(24px,4vw,42px);
   color:var(--ink); text-decoration:none; border-bottom:2px solid var(--ink); padding-bottom:4px;
@@ -335,7 +354,7 @@ footer{ border-top:1px solid var(--line-soft); padding:90px 0 40px; text-align:c
   align-items:center; flex-wrap:wrap; gap:12px; font-size:12.5px; color:var(--ink-soft);
 }
 @media (max-width:600px){
-  footer{ padding:64px 0 32px; }
+  footer.wrap{ padding-top:64px; padding-bottom:32px; }
   .footer-social{ gap:22px; margin:32px 0 28px; }
   .footer-meta{ flex-direction:column; text-align:center; }
 }
