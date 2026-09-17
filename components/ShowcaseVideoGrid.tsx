@@ -47,6 +47,27 @@ export default function ShowcaseVideoGrid({ videos }: { videos: ShowcaseVideo[] 
     setRatios((prev) => (prev[key] ? prev : { ...prev, [key]: ratio }));
   };
 
+  // Server-side ratio (video.ratio) covers almost every case, but if that
+  // playlist fetch ever failed at build time, the only other signal is the
+  // <video> element's own loadedmetadata — and that depends on the browser's
+  // video engine: Safari plays HLS natively while every other browser goes
+  // through hls.js, and the two don't fire (or delay) that event the same
+  // way. A poster image loads exactly the same everywhere regardless of
+  // video engine, so probe it directly as a second, video-independent way
+  // to learn the real ratio before falling back to the video element.
+  useEffect(() => {
+    videos.forEach((video) => {
+      if (video.ratio || !video.poster) return;
+      const img = new Image();
+      img.onload = () => {
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        setRatios((prev) => (prev[video.url] ? prev : { ...prev, [video.url]: ratio }));
+      };
+      img.src = video.poster;
+    });
+  }, [videos]);
+
   const numColumns = containerWidth > 0 ? columnsForWidth(containerWidth) : 3;
   const gap = containerWidth > 0 && containerWidth <= 700 ? 16 : 32;
 
