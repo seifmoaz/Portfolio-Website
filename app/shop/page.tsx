@@ -16,7 +16,7 @@ export default function ShopPage() {
             Currently
             <span className="accent-word">developing.</span>
           </h1>
-          <p className="sub">Presets, LUTs &amp; more, on the way</p>
+          <p className="sub">Something for your own edits is coming ;)</p>
         </div>
       </main>
     </>
