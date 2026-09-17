@@ -1,6 +1,7 @@
 export default function Footer() {
   return (
     <footer className="wrap">
+      <p className="footer-eyebrow">Got a project in mind?</p>
       <a href="mailto:contact@seifmoaz.com" className="footer-email">
         contact@seifmoaz.com
       </a>
