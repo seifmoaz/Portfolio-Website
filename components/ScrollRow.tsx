@@ -65,7 +65,7 @@ export default function ScrollRow({ className, children }: { className: string; 
     const max = el.scrollWidth - el.clientWidth;
     const target = Math.min(Math.max(start + dir * stepDistance(el), 0), max);
     const change = target - start;
-    const duration = 650;
+    const duration = 380;
     const startTime = performance.now();
 
     // CSS scroll-snap fights a hand-driven scrollLeft animation: the
