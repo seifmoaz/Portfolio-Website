@@ -141,17 +141,25 @@ function deriveBunnyThumbnail(url: string): string | null {
 // 16:9 with black bars" bug this fixes. Reading the resolution out of the
 // HLS master playlist at request time instead means the real aspect ratio
 // is already known on first paint, no client-side load required.
-async function fetchHlsRatio(url: string): Promise<number | null> {
+async function fetchHlsRatio(url: string, attempt = 0): Promise<number | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error(`HLS playlist fetch failed: ${res.status}`);
     const text = await res.text();
     const match = text.match(/RESOLUTION=(\d+)x(\d+)/);
     if (!match) return null;
     const w = Number(match[1]);
     const h = Number(match[2]);
     return w && h ? w / h : null;
-  } catch {
+  } catch (err) {
+    // A freshly-uploaded video's manifest can be momentarily slow or not
+    // quite ready yet — one retry avoids that transient blip permanently
+    // baking a wrong fallback ratio into an ISR-cached page.
+    if (attempt < 1) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return fetchHlsRatio(url, attempt + 1);
+    }
+    console.error(`HLS ratio lookup failed for ${url}:`, err);
     return null;
   }
 }

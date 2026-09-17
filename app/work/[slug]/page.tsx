@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import NotionMedia from "@/components/NotionMedia";
+import GalleryGrid from "@/components/GalleryGrid";
 import ShowcaseVideoGrid from "@/components/ShowcaseVideoGrid";
 import ScrollToTop from "@/components/ScrollToTop";
 import { mediaSrc } from "@/lib/notion-media";
@@ -70,13 +70,7 @@ export default async function ProjectPage({
           </section>
         ) : project.gallery.length > 0 ? (
           <section className="wrap gallery">
-            <div className="gallery-masonry">
-              {project.gallery.map((media) => (
-                <div className="gallery-item" key={`${media.property}-${media.index}`}>
-                  <NotionMedia media={media} alt={project.name} width={1400} />
-                </div>
-              ))}
-            </div>
+            <GalleryGrid items={project.gallery} alt={project.name} />
           </section>
         ) : null}
 
