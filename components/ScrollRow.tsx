@@ -8,6 +8,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 // and touch-swipe scrolling on the row itself are untouched.
 export default function ScrollRow({ className, children }: { className: string; children: ReactNode }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -30,28 +31,51 @@ export default function ScrollRow({ className, children }: { className: string; 
     };
   }, []);
 
+  useEffect(
+    () => () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    },
+    [],
+  );
+
+  // One "step" is a single card's width — or, on the featured grid's 2-row
+  // layout, one column's width, which is the same measurement since every
+  // item in a grid-auto-columns track shares that track's width — plus the
+  // gap after it. Moving by that amount reveals exactly the next item plus
+  // a peek of the one after, instead of jumping to a whole new set.
+  const stepDistance = (el: HTMLDivElement) => {
+    const first = el.firstElementChild as HTMLElement | null;
+    if (!first) return el.clientWidth;
+    const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+    return first.getBoundingClientRect().width + gap;
+  };
+
   // Animates scrollLeft directly via rAF instead of scrollTo/scrollBy's
   // native `behavior: "smooth"` — that native animation is inconsistent
   // (silently a no-op in some browser/automation contexts) while a plain
   // scrollLeft assignment always works, so driving it by hand every frame
   // guarantees the sliding motion actually happens everywhere.
-  const scrollByPage = (dir: 1 | -1) => {
+  const scrollByStep = (dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+
     const start = el.scrollLeft;
     const max = el.scrollWidth - el.clientWidth;
-    const target = Math.min(Math.max(start + dir * el.clientWidth * 0.8, 0), max);
+    const target = Math.min(Math.max(start + dir * stepDistance(el), 0), max);
     const change = target - start;
-    const duration = 400;
+    const duration = 650;
     const startTime = performance.now();
 
     const step = (now: number) => {
       const t = Math.min((now - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
+      // Ease-in-out cubic — gentler acceleration and deceleration than a
+      // pure ease-out, reads as a smoother, more deliberate glide.
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       el.scrollLeft = start + change * eased;
-      if (t < 1) requestAnimationFrame(step);
+      animRef.current = t < 1 ? requestAnimationFrame(step) : null;
     };
-    requestAnimationFrame(step);
+    animRef.current = requestAnimationFrame(step);
   };
 
   return (
@@ -60,15 +84,15 @@ export default function ScrollRow({ className, children }: { className: string; 
         {children}
       </div>
       {canScrollLeft && (
-        <button className="scroll-arrow prev" aria-label="Scroll left" onClick={() => scrollByPage(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button className="scroll-arrow prev" aria-label="Scroll left" onClick={() => scrollByStep(-1)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 6l-6 6 6 6" />
           </svg>
         </button>
       )}
       {canScrollRight && (
-        <button className="scroll-arrow next" aria-label="Scroll right" onClick={() => scrollByPage(1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button className="scroll-arrow next" aria-label="Scroll right" onClick={() => scrollByStep(1)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 6l6 6-6 6" />
           </svg>
         </button>
