@@ -242,6 +242,13 @@ nav{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; heig
 }
 .form-field input:focus, .form-field textarea:focus{ border-color:var(--accent-deep); }
 .form-submit{ align-self:flex-start; margin-top:6px; border:none; cursor:pointer; }
+.form-submit:disabled{ opacity:0.6; cursor:default; }
+.form-success{
+  max-width:640px; margin:64px auto 0; padding:22px 24px; border:1.5px solid var(--accent-deep);
+  border-radius:4px; background:rgba(79,89,54,0.08); color:#0A0A0A; font-size:16px; text-align:center;
+}
+.form-error{ color:#B3261E; font-size:13.5px; margin:0; }
+.form-error a{ color:inherit; text-decoration:underline; }
 
 @media (max-width:880px){ .about-grid{ grid-template-columns:1fr; } }
 @media (max-width:500px){ .about-stats{ gap:32px 44px; } .about-stats .stat-num{ font-size:24px; } }

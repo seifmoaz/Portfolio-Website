@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
+import ContactForm from "@/components/ContactForm";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
 import NotionMedia from "@/components/NotionMedia";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -210,25 +211,7 @@ export default async function HomePage() {
           </div>
 
           <div className="wrap">
-            <form className="contact-form" action="mailto:contact@seifmoaz.com" method="POST" encType="text/plain">
-              <div className="form-field">
-                <label htmlFor="cf-first">First Name</label>
-                <input type="text" id="cf-first" name="First Name" required />
-              </div>
-              <div className="form-field">
-                <label htmlFor="cf-last">Last Name</label>
-                <input type="text" id="cf-last" name="Last Name" required />
-              </div>
-              <div className="form-field">
-                <label htmlFor="cf-email">Email</label>
-                <input type="email" id="cf-email" name="Email" required />
-              </div>
-              <div className="form-field">
-                <label htmlFor="cf-message">Message</label>
-                <textarea id="cf-message" name="Message" rows={5} required></textarea>
-              </div>
-              <button type="submit" className="btn-primary form-submit">Send message</button>
-            </form>
+            <ContactForm />
           </div>
         </Reveal>
 
