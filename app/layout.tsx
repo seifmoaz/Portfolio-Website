@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
+const title = "Seif — Photography & Videography";
+const description =
+  "Seif Moaz is a Cairo-based Creative Director, Visual Storyteller & Editor working across fashion, F&B, and event coverage.";
+
 export const metadata: Metadata = {
-  title: "Seif — Photography & Videography",
-  description:
-    "Seif Moaz is a Cairo-based Creative Director, Visual Storyteller & Editor working across fashion, F&B, and event coverage.",
+  metadataBase: new URL("https://seifmoaz.com"),
+  title,
+  description,
+  openGraph: { title, description, siteName: "Seif Moaz", type: "website" },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
