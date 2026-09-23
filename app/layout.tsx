@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import ImageProtection from "@/components/ImageProtection";
 import "./globals.css";
 
 const title = "Seif — Photography & Videography";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <ImageProtection />
         {children}
         <Analytics />
       </body>

@@ -8,6 +8,10 @@
   --accent:#B4C57A; --accent-deep:#4F5936;
 }
 *{box-sizing:border-box;}
+/* Complements ImageProtection.tsx's contextmenu/dragstart JS listeners —
+   some browsers key drag-out-to-desktop off this property directly rather
+   than only firing a cancellable dragstart event. */
+img{ -webkit-user-drag:none; user-drag:none; }
 html{scroll-behavior:smooth;}
 body{
   margin:0; background:var(--bone); color:var(--ink);
