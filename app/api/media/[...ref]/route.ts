@@ -1,5 +1,7 @@
 import sharp from "sharp";
+import { NextResponse } from "next/server";
 import { getMediaFileUrl } from "@/lib/notion";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +59,13 @@ export async function GET(
 
   if (!pageId || !property || !Number.isInteger(index)) {
     return new Response("Not found", { status: 404 });
+  }
+
+  // Resizing/re-encoding real photos is real CPU + a Notion API call per
+  // request; this caps per-IP abuse without affecting normal page loads,
+  // which stay well under this ceiling even on the busiest gallery pages.
+  if (!rateLimit(`media:${clientIp(request)}`, 300, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const url = await getMediaFileUrl(pageId, decodeURIComponent(property), index);
