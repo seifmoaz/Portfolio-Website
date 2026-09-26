@@ -27,12 +27,10 @@ function SocialLinks({ size }: { size: number }) {
           <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
         </svg>
       </a>
-      <a href="https://www.behance.net/seifmoaz1" target="_blank" rel="noopener" aria-label="Behance">
+      <a href="https://www.tiktok.com/@seif__moaz" target="_blank" rel="noopener" aria-label="TikTok">
         <svg width={size + 2} height={size + 2} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <path d="M2 7h6.2c2.9 0 3.9 3.4 1.4 4.5 3 .6 3.3 5-.5 5H2V7z" />
-          <path d="M2 11.3h5.6" />
-          <path d="M14 12.2c0-2 1.6-3 3.4-3 2 0 3.4 1.2 3.4 3.3v.4h-5.7c0 1.6 1 2.6 2.4 2.6 1 0 1.7-.4 2-1.1h1.2c-.4 1.4-1.7 2.2-3.2 2.2-2.1 0-3.5-1.5-3.5-3.7v-.7z" />
-          <path d="M15 9.2h4.6" />
+          <path d="M15 4v10.5a3.5 3.5 0 1 1 -3.5 -3.5c.17 0 .34 .01 .5 .03" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15 4a5 5 0 0 0 5 5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </a>
       <a href="https://www.linkedin.com/in/seifmoaz" target="_blank" rel="noopener" aria-label="LinkedIn">
